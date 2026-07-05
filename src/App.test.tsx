@@ -3,6 +3,11 @@ import { render, screen } from "@testing-library/react";
 import { HashRouter } from "react-router-dom";
 
 vi.mock("./worker/client", () => ({ workerRunner: vi.fn() }));
+// jsdom has no canvas, so Chart (ECharts) can't mount; Overview now renders
+// real Chart instances, so this test needs the same mock as Overview.test.tsx.
+vi.mock("./components/Chart", () => ({
+  default: ({ label }: { label: string }) => <div data-testid="chart">{label}</div>,
+}));
 
 import { appStore } from "./store/app";
 import App from "./App";
