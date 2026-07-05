@@ -32,6 +32,10 @@ runtime.
 | Secondary ink (labels) | `--muted` | `#97a0ac` | `#5b616b` |
 | Accent (interactive, equity line, focus) | `--accent` | `#5b9bf0` | `#2f6bcc` |
 
+The palette defines seven named roles; the brief anticipated 4–6, but raised
+surface (`--surface-2`) and hairline border (`--border`) proved load-bearing in the
+instrument-panel layout concept.
+
 ### Semantic P&L pair (reserved for meaning, never decoration)
 
 | Role | Token | Dark | Light |
@@ -39,10 +43,11 @@ runtime.
 | Profit | `--pos` | `#35c988` | `#0f7a45` |
 | Loss | `--neg` | `#f36a72` | `#c0303c` |
 
-Green and red carry one meaning only: the sign of a monetary figure. They never
-appear as chrome, branding, or emphasis. The interactive accent is deliberately
-blue — a third hue distinct from both P&L colours — so "this is a control / this is
-the cumulative line" can never be misread as "this is a gain / a loss".
+Green and red carry reserved meanings: the sign of a monetary figure, and (for
+loss-red) error state. They never appear as chrome, branding, or emphasis. The
+interactive accent is deliberately blue — a third hue distinct from both P&L
+colours — so "this is a control / this is the cumulative line" can never be misread
+as "this is a gain / a loss".
 
 ### WCAG AA contrast (checked, both themes)
 
