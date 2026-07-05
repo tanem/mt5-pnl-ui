@@ -24,3 +24,17 @@ if (typeof globalThis.Blob.prototype.stream === "undefined") {
     }) as never;
   };
 }
+
+// jsdom does no layout, so every element reports 0x0 and lacks ResizeObserver.
+// @tanstack/react-virtual measures its scroll container on mount and treats a
+// 0-sized rect as "not yet measured", which permanently suppresses virtual
+// rows (its initialRect fallback is overridden by that same 0x0 reading).
+// Stub non-zero layout sizes so virtualised tables can render in tests.
+Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+  configurable: true,
+  value: 800,
+});
+Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+  configurable: true,
+  value: 600,
+});
