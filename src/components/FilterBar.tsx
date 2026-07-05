@@ -23,11 +23,19 @@ export default function FilterBar() {
   }
 
   return (
-    <section aria-label="Filters" className="flex flex-wrap items-end gap-4 border-b p-3">
-      <fieldset className="flex gap-2">
-        <legend className="text-sm">Accounts</legend>
+    <section
+      aria-label="Filters"
+      className="mx-auto flex w-full max-w-6xl flex-wrap items-end gap-x-5 gap-y-3 border-b border-border px-4 py-3"
+    >
+      <fieldset className="flex flex-wrap items-center gap-3">
+        <legend className="text-xs tracking-wide text-muted uppercase">
+          Accounts
+        </legend>
         {accounts.map((a) => (
-          <label key={a.login} className="flex items-center gap-1">
+          <label
+            key={a.login}
+            className="flex items-center gap-1.5 text-sm text-text"
+          >
             <input
               type="checkbox"
               checked={selected.includes(a.login)}
@@ -38,7 +46,7 @@ export default function FilterBar() {
         ))}
       </fieldset>
 
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-xs tracking-wide text-muted uppercase">
         From
         <input
           type="date"
@@ -46,7 +54,7 @@ export default function FilterBar() {
           onChange={(e) => setFilters({ from: e.target.value || null })}
         />
       </label>
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-xs tracking-wide text-muted uppercase">
         To
         <input
           type="date"
@@ -55,7 +63,7 @@ export default function FilterBar() {
         />
       </label>
 
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-xs tracking-wide text-muted uppercase">
         Symbol
         <select
           value={filters.symbol ?? ""}
@@ -70,7 +78,7 @@ export default function FilterBar() {
         </select>
       </label>
 
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-xs tracking-wide text-muted uppercase">
         Magic
         <input
           type="number"

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { useCurrencyGroups } from "../store/selectors";
 import { bucketByDayUTC, type Bucket } from "../lib/derive/buckets";
 import { signedMoney } from "../lib/format";
@@ -37,10 +37,12 @@ function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] 
   const prefix = `${year}-${String(month0 + 1).padStart(2, "0")}`;
   let monthNet = 0;
   let monthTrades = 0;
+  let peak = 0; // largest |net| this month — the heat scale's reference
   for (const [k, b] of days) {
     if (k.startsWith(prefix)) {
       monthNet += b.net;
       monthTrades += b.trades;
+      peak = Math.max(peak, Math.abs(b.net));
     }
   }
 
@@ -51,17 +53,41 @@ function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] 
   }
 
   return (
-    <section aria-label={`${currency} calendar`} className="mb-8">
-      <div className="mb-2 flex items-center gap-3">
-        <h2 className="text-lg font-semibold">{currency}</h2>
-        <button type="button" aria-label="Previous month" onClick={() => shift(-1)} className="border px-2">‹</button>
-        <span>{MONTHS[month0]} {year}</span>
-        <button type="button" aria-label="Next month" onClick={() => shift(1)} className="border px-2">›</button>
+    <section aria-label={`${currency} calendar`} className="mb-10">
+      <div className="mb-3 flex items-center gap-3">
+        <h2 className="font-mono text-sm font-semibold tracking-widest text-muted uppercase">
+          {currency}
+        </h2>
+        <button
+          type="button"
+          aria-label="Previous month"
+          onClick={() => shift(-1)}
+          className="rounded-md border border-border px-2 text-muted transition-colors hover:bg-surface-2 hover:text-text"
+        >
+          ‹
+        </button>
+        <span className="text-sm font-medium tabular-nums">
+          {MONTHS[month0]} {year}
+        </span>
+        <button
+          type="button"
+          aria-label="Next month"
+          onClick={() => shift(1)}
+          className="rounded-md border border-border px-2 text-muted transition-colors hover:bg-surface-2 hover:text-text"
+        >
+          ›
+        </button>
       </div>
 
-      <div role="grid" aria-label={`${MONTHS[month0]} ${year}`} className="grid grid-cols-7 gap-1">
+      <div role="grid" aria-label={`${MONTHS[month0]} ${year}`} className="grid grid-cols-7 gap-1.5">
         {WEEKDAYS.map((w) => (
-          <div key={w} role="columnheader" className="text-center text-sm">{w}</div>
+          <div
+            key={w}
+            role="columnheader"
+            className="pb-1 text-center text-xs tracking-wide text-muted uppercase"
+          >
+            {w}
+          </div>
         ))}
         {cells.map((key, i) =>
           key === null ? (
@@ -74,13 +100,24 @@ function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] 
               data-tone={
                 days.get(key) ? (days.get(key)!.net >= 0 ? "pos" : "neg") : undefined
               }
-              className="min-h-16 rounded border p-1 text-sm tabular-nums"
+              style={
+                days.get(key) && peak > 0
+                  ? ({
+                      "--heat": Math.abs(days.get(key)!.net) / peak,
+                    } as CSSProperties)
+                  : undefined
+              }
+              className="day-cell min-h-16 rounded-md bg-surface p-1.5 font-mono text-sm tabular-nums"
             >
-              <div>{Number(key.slice(8))}</div>
+              <div className="text-muted">{Number(key.slice(8))}</div>
               {days.get(key) && (
                 <>
-                  <div>{signedMoney(days.get(key)!.net, "").trim()}</div>
-                  <div>{days.get(key)!.trades} trades</div>
+                  <div className="mt-0.5 font-semibold text-text">
+                    {signedMoney(days.get(key)!.net, "").trim()}
+                  </div>
+                  <div className="text-[0.7rem] text-muted">
+                    {days.get(key)!.trades} trades
+                  </div>
                 </>
               )}
             </div>
@@ -88,8 +125,12 @@ function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] 
         )}
       </div>
 
-      <p className="mt-2">
-        Month total: {signedMoney(monthNet, currency)} · {monthTrades} trades
+      <p className="mt-3 text-sm text-muted">
+        Month total:{" "}
+        <span className="font-mono font-semibold text-text tabular-nums">
+          {signedMoney(monthNet, currency)}
+        </span>{" "}
+        · {monthTrades} trades
       </p>
     </section>
   );
@@ -98,7 +139,8 @@ function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] 
 export default function CalendarView() {
   const groups = useCurrencyGroups();
   const entries = [...groups.entries()];
-  if (entries.length === 0) return <p>No closed deals match the current filters.</p>;
+  if (entries.length === 0)
+    return <p className="text-muted">No closed deals match the current filters.</p>;
   return (
     <div>
       {entries.map(([currency, deals]) => (

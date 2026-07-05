@@ -4,7 +4,7 @@ import { computeStats } from "../lib/derive/stats";
 import { equityCurve, maxDrawdown } from "../lib/derive/equity";
 import { bucketByDayUTC, bucketByMonthUTC, dayKeyUTC } from "../lib/derive/buckets";
 import { money, pct, ratio, signedMoney } from "../lib/format";
-import { LINE, NEG, POS } from "../lib/chartTheme";
+import { axis, LINE, NEG, POS } from "../lib/chartTheme";
 import StatTile from "../components/StatTile";
 import Chart from "../components/Chart";
 import type { ClosedDeal } from "../lib/snapshot/types";
@@ -37,8 +37,10 @@ function CurrencySection({ currency, deals }: { currency: string; deals: ClosedD
   }, [deals]);
 
   return (
-    <section aria-label={`${currency} overview`} className="mb-8">
-      <h2 className="mb-2 text-lg font-semibold">{currency}</h2>
+    <section aria-label={`${currency} overview`} className="mb-10">
+      <h2 className="mb-3 font-mono text-sm font-semibold tracking-widest text-muted uppercase">
+        {currency}
+      </h2>
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="Net P&L" value={signedMoney(stats.netPnl, currency)} tone={tone(stats.netPnl)} />
         <StatTile label="Win rate" value={pct(stats.winRate)} />
@@ -54,13 +56,13 @@ function CurrencySection({ currency, deals }: { currency: string; deals: ClosedD
         label={`Cumulative net P&L (${currency})`}
         option={{
           grid: { left: 60, right: 16, top: 16, bottom: 24 },
-          xAxis: { type: "time" },
-          yAxis: { type: "value" },
+          xAxis: { type: "time", ...axis },
+          yAxis: { type: "value", ...axis },
           tooltip: { trigger: "axis" },
           series: [{
             type: "line",
             showSymbol: false,
-            lineStyle: { color: LINE },
+            lineStyle: { color: LINE, width: 2 },
             data: curve.map((p) => [p.timeMsc, p.cum]),
           }],
         }}
@@ -71,8 +73,8 @@ function CurrencySection({ currency, deals }: { currency: string; deals: ClosedD
           label={`Monthly net P&L (${currency})`}
           option={{
             grid: { left: 60, right: 16, top: 16, bottom: 24 },
-            xAxis: { type: "category", data: monthly.keys },
-            yAxis: { type: "value" },
+            xAxis: { type: "category", data: monthly.keys, ...axis },
+            yAxis: { type: "value", ...axis },
             tooltip: {},
             series: [{ type: "bar", data: signColours(monthly.nets) }],
           }}
@@ -81,8 +83,8 @@ function CurrencySection({ currency, deals }: { currency: string; deals: ClosedD
           label={`Last 30 days net P&L (${currency})`}
           option={{
             grid: { left: 60, right: 16, top: 16, bottom: 24 },
-            xAxis: { type: "category", data: daily.keys },
-            yAxis: { type: "value" },
+            xAxis: { type: "category", data: daily.keys, ...axis },
+            yAxis: { type: "value", ...axis },
             tooltip: {},
             series: [{ type: "bar", data: signColours(daily.nets) }],
           }}
@@ -98,7 +100,7 @@ export default function Overview() {
   return (
     <div>
       {entries.length > 1 && (
-        <p className="mb-4 text-sm">
+        <p className="mb-6 border-l-2 border-accent bg-surface py-2 pr-3 pl-3 text-sm text-muted">
           Accounts in scope span multiple currencies; figures are shown per
           currency and never combined.
         </p>
@@ -106,7 +108,9 @@ export default function Overview() {
       {entries.map(([currency, deals]) => (
         <CurrencySection key={currency} currency={currency} deals={deals} />
       ))}
-      {entries.length === 0 && <p>No closed deals match the current filters.</p>}
+      {entries.length === 0 && (
+        <p className="text-muted">No closed deals match the current filters.</p>
+      )}
     </div>
   );
 }

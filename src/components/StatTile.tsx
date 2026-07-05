@@ -6,9 +6,14 @@ interface Props {
 
 export default function StatTile({ label, value, tone = "neutral" }: Props) {
   return (
-    <div className="rounded border p-3" data-tone={tone}>
-      <div className="text-sm">{label}</div>
-      <div className="text-lg font-semibold tabular-nums">{value}</div>
+    <div
+      className="stat-tile rounded-md border border-border bg-surface py-2.5 pr-3 pl-3"
+      data-tone={tone}
+    >
+      <div className="text-xs tracking-wide text-muted uppercase">{label}</div>
+      <div className="stat-value mt-1 font-mono text-lg font-semibold tabular-nums">
+        {value}
+      </div>
     </div>
   );
 }

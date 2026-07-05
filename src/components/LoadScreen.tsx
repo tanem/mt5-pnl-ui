@@ -89,37 +89,52 @@ export default function LoadScreen() {
 
   return (
     <main
-      className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 p-6"
+      className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-5 p-6"
       onDrop={onDrop}
       onDragOver={(e) => e.preventDefault()}
     >
-      <h1 className="text-xl font-semibold">mt5-pnl-ui</h1>
-      <p>
-        Open the <code>snapshot.json.gz.age</code> file written by
-        mt5-pnl-exporter. It is decrypted here, in your browser — nothing
-        leaves this machine.
-      </p>
+      <div className="flex flex-col gap-3">
+        <h1 className="font-mono text-xl font-semibold tracking-tight">
+          mt5<span className="text-accent">-</span>pnl-ui
+        </h1>
+        <p className="text-sm leading-relaxed text-muted">
+          Open the{" "}
+          <code className="rounded bg-surface-2 px-1 py-0.5 font-mono text-text">
+            snapshot.json.gz.age
+          </code>{" "}
+          file written by mt5-pnl-exporter. It is decrypted here, in your browser
+          — nothing leaves this machine.
+        </p>
+      </div>
 
       {saved && !file && (
-        <button type="button" onClick={reopenSaved} className="border p-2">
+        <button
+          type="button"
+          onClick={reopenSaved}
+          className="rounded-md border border-border bg-surface p-2.5 text-left text-sm transition-colors hover:bg-surface-2"
+        >
           Reopen {saved.name}
         </button>
       )}
       {handleGone && (
-        <p role="alert">
+        <p role="alert" className="text-sm text-neg">
           The saved file is no longer accessible — pick it again.
         </p>
       )}
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-3" aria-busy={working}>
-        <label className="flex flex-col gap-1">
+      <form
+        onSubmit={onSubmit}
+        className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5"
+        aria-busy={working}
+      >
+        <label className="flex flex-col gap-1.5 text-xs tracking-wide text-muted uppercase">
           Snapshot file
           {window.showOpenFilePicker ? (
             <button
               type="button"
               onClick={pickWithHandlePicker}
               disabled={working}
-              className="border p-2 text-left"
+              className="rounded-md border border-border bg-surface-2 p-2.5 text-left text-sm text-text normal-case transition-colors hover:border-accent disabled:opacity-50"
             >
               {file ? file.name : "Choose file…"}
             </button>
@@ -136,7 +151,7 @@ export default function LoadScreen() {
           )}
         </label>
 
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1.5 text-xs tracking-wide text-muted uppercase">
           Passphrase
           <input
             ref={passRef}
@@ -145,20 +160,24 @@ export default function LoadScreen() {
             value={passphrase}
             disabled={working}
             onChange={(e) => setPassphrase(e.target.value)}
-            className="border p-2"
+            className="text-base text-text"
           />
         </label>
 
         <button
           type="submit"
           disabled={working || !file || !passphrase}
-          className="border p-2"
+          className="rounded-md bg-accent px-3 py-2.5 text-sm font-semibold text-bg transition-opacity hover:opacity-90 disabled:opacity-40"
         >
           {working ? "Decrypting…" : "Unlock"}
         </button>
       </form>
 
-      {status === "error" && error && <p role="alert">{error}</p>}
+      {status === "error" && error && (
+        <p role="alert" className="text-sm text-neg">
+          {error}
+        </p>
+      )}
     </main>
   );
 }

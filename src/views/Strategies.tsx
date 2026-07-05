@@ -58,14 +58,17 @@ export default function Strategies() {
   );
 
   const entries = [...groups.entries()];
-  if (entries.length === 0) return <p>No closed deals match the current filters.</p>;
+  if (entries.length === 0)
+    return <p className="text-muted">No closed deals match the current filters.</p>;
 
   return (
     <div>
-      <fieldset className="mb-3 flex gap-3">
-        <legend className="text-sm">Group by</legend>
+      <fieldset className="mb-4 flex items-center gap-4">
+        <legend className="mr-1 text-xs tracking-wide text-muted uppercase">
+          Group by
+        </legend>
         {(["account", "magic"] as const).map((g) => (
-          <label key={g} className="flex items-center gap-1">
+          <label key={g} className="flex items-center gap-1.5 text-sm text-text">
             <input
               type="radio"
               name="group-by"
@@ -80,13 +83,16 @@ export default function Strategies() {
       {entries.map(([currency, deals]) => {
         const strategyRows = [...groupDeals(deals, by, labelByLogin).entries()];
         return (
-          <section key={currency} aria-label={`${currency} strategies`} className="mb-8">
-            <h2 className="mb-2 text-lg font-semibold">{currency}</h2>
-            <table className="w-full text-sm tabular-nums">
-              <thead>
+          <section key={currency} aria-label={`${currency} strategies`} className="mb-10">
+            <h2 className="mb-3 font-mono text-sm font-semibold tracking-widest text-muted uppercase">
+              {currency}
+            </h2>
+            <div className="overflow-x-auto rounded-md border border-border">
+            <table className="w-full font-mono text-sm tabular-nums">
+              <thead className="bg-surface-2">
                 <tr>
                   {[by === "account" ? "Account" : "Magic", "Net P&L", "Win rate", "Profit factor", "Max drawdown", "Trades", "Equity"].map((h) => (
-                    <th key={h} className="p-2 text-left">{h}</th>
+                    <th key={h} className="border-b border-border p-2 text-left text-xs tracking-wide text-muted uppercase">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -95,7 +101,7 @@ export default function Strategies() {
                   const s = computeStats(group);
                   const dd = maxDrawdown(equityCurve(group));
                   return (
-                    <tr key={key}>
+                    <tr key={key} className="border-b border-border transition-colors hover:bg-surface-2">
                       <td className="p-2">{key}</td>
                       <td className="p-2">{signedMoney(s.netPnl, currency)}</td>
                       <td className="p-2">{pct(s.winRate)}</td>
@@ -108,6 +114,7 @@ export default function Strategies() {
                 })}
               </tbody>
             </table>
+            </div>
           </section>
         );
       })}

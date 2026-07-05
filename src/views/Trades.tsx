@@ -30,14 +30,18 @@ export default function Trades() {
   const [tab, setTab] = useState<Tab>("Closed deals");
   return (
     <div>
-      <div role="tablist" className="mb-3 flex gap-2">
+      <div role="tablist" className="mb-4 flex gap-2 border-b border-border">
         {TABS.map((t) => (
           <button
             key={t}
             role="tab"
             aria-selected={tab === t}
             onClick={() => setTab(t)}
-            className={`border px-3 py-1 ${tab === t ? "font-semibold" : ""}`}
+            className={`-mb-px border-b-2 px-3 py-1.5 text-sm transition-colors ${
+              tab === t
+                ? "border-accent font-semibold text-text"
+                : "border-transparent text-muted hover:text-text"
+            }`}
           >
             {t}
           </button>
@@ -111,20 +115,27 @@ function ClosedDeals() {
     initialRect: { width: 800, height: 600 }, // jsdom has no layout
   });
 
-  if (rows.length === 0) return <p>No closed deals match the current filters.</p>;
+  if (rows.length === 0)
+    return <p className="text-muted">No closed deals match the current filters.</p>;
 
   return (
-    <div ref={parentRef} className="max-h-[70vh] overflow-auto border">
-      <table className="w-full text-sm tabular-nums">
-        <thead className="sticky top-0">
+    <div
+      ref={parentRef}
+      className="max-h-[70vh] overflow-auto rounded-md border border-border"
+    >
+      <table className="w-full font-mono text-sm tabular-nums">
+        <thead className="sticky top-0 z-10 bg-surface-2">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((h) => (
-                <th key={h.id} className="p-2 text-left">
+                <th
+                  key={h.id}
+                  className="border-b border-border p-2 text-left text-xs tracking-wide text-muted uppercase"
+                >
                   <button
                     type="button"
                     onClick={h.column.getToggleSortingHandler()}
-                    className="font-semibold"
+                    className="font-semibold transition-colors hover:text-text"
                   >
                     {flexRender(h.column.columnDef.header, h.getContext())}
                     {{ asc: " ↑", desc: " ↓" }[h.column.getIsSorted() as string] ?? ""}
@@ -142,6 +153,7 @@ function ClosedDeals() {
             return (
               <tr
                 key={row.id}
+                className="border-b border-border transition-colors hover:bg-surface-2"
                 style={{
                   position: "absolute",
                   transform: `translateY(${vi.start}px)`,
@@ -173,19 +185,21 @@ function OpenPositions() {
   const filters = useApp((s) => s.filters);
   const labels = useLabelByLogin();
   const rows = useMemo(() => applyFilters(positions, filters), [positions, filters]);
-  if (rows.length === 0) return <p>No open positions.</p>;
+  if (rows.length === 0)
+    return <p className="text-muted">No open positions.</p>;
   return (
-    <table className="w-full text-sm tabular-nums">
-      <thead>
+    <div className="overflow-x-auto rounded-md border border-border">
+    <table className="w-full font-mono text-sm tabular-nums">
+      <thead className="bg-surface-2">
         <tr>
           {["Opened", "Account", "Symbol", "Magic", "Volume", "Open", "Current", "SL", "TP", "Profit", "Swap"].map((h) => (
-            <th key={h} className="p-2 text-left">{h}</th>
+            <th key={h} className="border-b border-border p-2 text-left text-xs tracking-wide text-muted uppercase">{h}</th>
           ))}
         </tr>
       </thead>
       <tbody>
         {rows.map((p: OpenPosition) => (
-          <tr key={`${p.account}-${p.ticket}`}>
+          <tr key={`${p.account}-${p.ticket}`} className="border-b border-border transition-colors hover:bg-surface-2">
             <td className="p-2">{iso(p.time)}</td>
             <td className="p-2">{labels.get(p.account) ?? p.account}</td>
             <td className="p-2">{p.symbol}</td>
@@ -201,6 +215,7 @@ function OpenPositions() {
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 
@@ -213,19 +228,20 @@ function CashFlows() {
     () => applyFilters(flows, { ...filters, symbol: null, magic: null }),
     [flows, filters],
   );
-  if (rows.length === 0) return <p>No cash flows.</p>;
+  if (rows.length === 0) return <p className="text-muted">No cash flows.</p>;
   return (
-    <table className="w-full text-sm tabular-nums">
-      <thead>
+    <div className="overflow-x-auto rounded-md border border-border">
+    <table className="w-full font-mono text-sm tabular-nums">
+      <thead className="bg-surface-2">
         <tr>
           {["Time", "Account", "Type", "Amount", "Comment"].map((h) => (
-            <th key={h} className="p-2 text-left">{h}</th>
+            <th key={h} className="border-b border-border p-2 text-left text-xs tracking-wide text-muted uppercase">{h}</th>
           ))}
         </tr>
       </thead>
       <tbody>
         {rows.map((f: CashFlow) => (
-          <tr key={`${f.account}-${f.ticket}`}>
+          <tr key={`${f.account}-${f.ticket}`} className="border-b border-border transition-colors hover:bg-surface-2">
             <td className="p-2">{iso(f.time)}</td>
             <td className="p-2">{labels.get(f.account) ?? f.account}</td>
             <td className="p-2">{f.type}</td>
@@ -235,5 +251,6 @@ function CashFlows() {
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
