@@ -54,8 +54,8 @@ Don't hand-bump these versions — let Renovate's PRs flow through.
 ## Releasing
 
 The `main` branch deploys automatically to GitHub Pages on every push via
-[`ci.yml`](.github/workflows/ci.yml) — there is no separate release or
-tag step.
+[`deploy.yml`](.github/workflows/deploy.yml) — there is no separate
+release or tag step.
 
 ## Conventions
 

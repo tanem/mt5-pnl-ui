@@ -65,6 +65,18 @@ requires 4.5:1 for normal text; all foreground text tokens clear it in both them
 (Contrast script and figures reproduced during development; re-run against the
 surface a colour actually renders on if these values change.)
 
+**Accepted exception — chart axis ink.** `AXIS #898781` (below) is 3.59:1 on the
+light chart surface (`#ffffff`), under the 4.5:1 AA floor, and 4.81:1 on the dark
+chart surface (`#171b21`). No single colour clears 4.5:1 on both: reaching 4.5:1
+on white caps relative luminance at ≤0.183, while reaching 4.5:1 on the dark
+surface (relative luminance ≈0.0108) requires ≥0.223 — the two requirements
+don't overlap, so it is mathematically impossible for one static hex value to
+satisfy both surfaces at AA. `AXIS` is accepted as-is because it is
+supplementary chrome, not the value itself: axis ticks label the scale, but
+every plotted value is also readable from the tooltip and the adjacent stat
+tiles/tables, which do meet AA. If ECharts ever gains runtime re-theming, split
+`AXIS` into a light/dark pair rather than revisiting this exception.
+
 ### Chart palette (`src/lib/chartTheme.ts`)
 
 Charts render to an ECharts canvas that is not re-themed at runtime, so they share
