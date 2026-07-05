@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useApp } from "../store/app";
+import { formatTimestamp } from "../lib/format";
 import FilterBar from "./FilterBar";
 
 const tabs = [
@@ -39,7 +40,8 @@ export default function Layout() {
           ))}
         </nav>
         <span className="ml-auto text-xs text-muted tabular-nums">
-          <span className="text-text">{fileName}</span> · exported {generatedAt}
+          <span className="text-text">{fileName}</span> · exported{" "}
+          {generatedAt ? formatTimestamp(generatedAt) : generatedAt}
         </span>
         <button
           type="button"

@@ -30,7 +30,9 @@ function CurrencySection({ currency, deals }: { currency: string; deals: ClosedD
 
   const daily = useMemo(() => {
     const buckets = bucketByDayUTC(deals);
-    const last = deals.length ? Math.max(...deals.map((d) => d.time)) : 0;
+    const last = deals.length
+      ? deals.reduce((m, d) => (d.time > m ? d.time : m), 0)
+      : 0;
     const keys: string[] = [];
     for (let i = 29; i >= 0; i--) keys.push(dayKeyUTC(last - i * 86400));
     return { keys, nets: keys.map((k) => buckets.get(k)?.net ?? 0) };

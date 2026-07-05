@@ -24,7 +24,9 @@ const MONTHS = [
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function latestDealTime(deals: ClosedDeal[]): number {
-  return deals.length ? Math.max(...deals.map((d) => d.time)) : Date.now() / 1000;
+  return deals.length
+    ? deals.reduce((m, d) => (d.time > m ? d.time : m), 0)
+    : Date.now() / 1000;
 }
 
 function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] }) {

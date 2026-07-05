@@ -21,3 +21,13 @@ export function pct(v: number | null): string {
 export function ratio(v: number | null): string {
   return v === null ? "n/a" : v.toFixed(2);
 }
+
+/** "2026-07-05T00:00:00Z" → "2026-07-05 00:00 UTC" — deterministic, always UTC. */
+export function formatTimestamp(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ` +
+    `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`
+  );
+}
