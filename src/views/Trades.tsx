@@ -86,17 +86,13 @@ function ClosedDeals() {
         id: "net",
         header: "Net",
         cell: (c) => grouped.format(c.getValue()),
-        // Numeric columns default to descending-first (tanstack-table's
-        // getAutoSortDir); force ascending-first so the first click on an
-        // unsorted numeric column sorts smallest-first, matching the other
-        // (string) columns' convention.
-        sortDescFirst: false,
       }),
     ],
     [labels],
   );
 
   const table = useReactTable({
+    sortDescFirst: false,
     data: deals,
     columns,
     state: { sorting },
