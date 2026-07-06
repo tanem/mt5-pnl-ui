@@ -59,3 +59,13 @@ test("empty open positions tab says so", async () => {
   await user.click(screen.getByRole("tab", { name: /open positions/i }));
   expect(screen.getByText(/no open positions/i)).toBeInTheDocument();
 });
+
+test("numeric cells are right-aligned and no cell wraps", () => {
+  render(<Trades />);
+  const net = screen.getAllByTestId("cell-net")[0]!;
+  expect(net.className).toContain("text-right");
+  expect(net.className).toContain("whitespace-nowrap");
+  const time = screen.getAllByTestId("cell-time")[0]!;
+  expect(time.className).toContain("whitespace-nowrap");
+  expect(time.className).not.toContain("text-right");
+});
