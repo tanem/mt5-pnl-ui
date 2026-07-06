@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState, type CSSProperties } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useCurrencyGroups } from "../store/selectors";
 import { bucketByDayUTC, type Bucket } from "../lib/derive/buckets";
 import { signedMoney } from "../lib/format";
@@ -84,12 +84,10 @@ function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] 
   const prefix = `${year}-${String(month0 + 1).padStart(2, "0")}`;
   let monthNet = 0;
   let monthTrades = 0;
-  let peak = 0; // largest |net| this month — the heat scale's reference
   for (const [k, b] of days) {
     if (k.startsWith(prefix)) {
       monthNet += b.net;
       monthTrades += b.trades;
-      peak = Math.max(peak, Math.abs(b.net));
     }
   }
 
@@ -159,14 +157,7 @@ function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] 
                   data-tone={
                     days.get(key) ? (days.get(key)!.net >= 0 ? "pos" : "neg") : undefined
                   }
-                  style={
-                    days.get(key) && peak > 0
-                      ? ({
-                          "--heat": Math.abs(days.get(key)!.net) / peak,
-                        } as CSSProperties)
-                      : undefined
-                  }
-                  className="day-cell min-h-16 rounded-md bg-surface p-1.5 font-mono text-sm tabular-nums"
+                  className="day-cell min-h-16 rounded-md p-1.5 font-mono text-sm tabular-nums"
                 >
                   <div className="text-muted">{Number(key.slice(8))}</div>
                   {days.get(key) && (

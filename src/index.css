@@ -139,20 +139,26 @@
   }
 
   /*
-    Calendar day cells: the signature element. Background intensity scales
-    with the day's magnitude (--heat, 0..1 relative to the month's peak), so
-    the eye ranks winning and losing days by weight before reading a figure.
-    Sign is carried by hue AND the signed number, never by hue alone.
+    Calendar day cells: the signature element. Traded days carry a flat
+    wash of the profit or loss colour — the same strength for every day,
+    deliberately not scaled by magnitude, so a large losing day carries no
+    more visual force than a small one. Sign is read at a glance; weight
+    is left to the signed figures and the week/month totals. Sign is
+    carried by hue AND the signed number, never by hue alone. The resting
+    background lives here rather than as a bg-surface utility on the cell:
+    a utility would win the cascade over these @layer base rules by layer
+    order and blank the wash (it did once).
   */
   .day-cell {
+    background: var(--surface);
     border: 1px solid var(--border);
   }
   .day-cell[data-tone="pos"] {
-    background: rgb(var(--pos-rgb) / calc(0.1 + 0.5 * var(--heat, 0)));
+    background: rgb(var(--pos-rgb) / 0.12);
     border-color: color-mix(in srgb, var(--pos) 45%, var(--border));
   }
   .day-cell[data-tone="neg"] {
-    background: rgb(var(--neg-rgb) / calc(0.1 + 0.5 * var(--heat, 0)));
+    background: rgb(var(--neg-rgb) / 0.12);
     border-color: color-mix(in srgb, var(--neg) 45%, var(--border));
   }
 
