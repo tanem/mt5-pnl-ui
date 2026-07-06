@@ -75,6 +75,13 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   `dist/index.html`; `npm run dev` serves an unrestricted page. Verify
   the CSP with `npm run build && grep "connect-src" dist/index.html`,
   not by loading the dev server.
+- **Tailwind utilities beat `@layer base` rules.** Utility classes sit in
+  the later `utilities` cascade layer, so a utility on an element (e.g.
+  `bg-surface`) silently overrides `@layer base` styling for the same
+  property regardless of selector specificity — this once blanked the
+  calendar's day-cell wash. Elements styled conditionally from
+  `index.css` (like `.day-cell`) must get all their values for that
+  property there, and e2e guards the computed style where it matters.
 - **The worker is mocked in unit tests.** Every test that renders
   through the store does `vi.mock("../worker/client", () => ({
   workerRunner: vi.fn() }))` (or the App-level equivalent) — unit tests

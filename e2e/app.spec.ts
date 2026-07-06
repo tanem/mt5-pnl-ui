@@ -20,6 +20,17 @@ test("decrypts a snapshot and renders the dashboard", async ({ page }) => {
   await expect(
     page.getByRole("columnheader", { name: "Week" }).first(),
   ).toBeVisible();
+  // Traded days carry the flat P&L wash — a computed-style guard, because
+  // jsdom unit tests never load the built stylesheet (this regressed once
+  // via cascade-layer order without any test noticing).
+  await expect(page.locator('.day-cell[data-tone="pos"]').first()).toHaveCSS(
+    "background-color",
+    "rgba(15, 122, 69, 0.12)",
+  );
+  await expect(page.locator('.day-cell[data-tone="neg"]').first()).toHaveCSS(
+    "background-color",
+    "rgba(192, 48, 60, 0.12)",
+  );
   await page.getByRole("link", { name: "Trades" }).click();
   await expect(page.getByRole("tab", { name: /closed deals/i })).toBeVisible();
   await page.getByRole("link", { name: "Strategies" }).click();

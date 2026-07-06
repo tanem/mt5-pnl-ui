@@ -120,12 +120,14 @@ active tab is marked by a 2px accent underline — the one place the accent touc
 chrome, because "where am I" is a legibility question. Everything around the data
 is quiet: hairline borders, muted labels, no glow, no gradient fills.
 
-**Signature element — the P&L heat-calendar.** The calendar's day cells are the one
-memorable device. Each cell's background intensity scales with the day's magnitude
-relative to that month's peak (`--heat`, 0..1, driving the alpha of the profit or
-loss colour), so the eye ranks winning and losing days by weight before reading a
-single figure — exactly the scan a trader makes ("which days moved the account?").
-The same tone language echoes, quietly, as a left edge on stat tiles, tying tiles,
+**Signature element — the P&L tone-wash calendar.** The calendar's day cells are
+the one memorable device. Every traded day carries a flat wash of the profit or
+loss colour (12% alpha over the surface) with a matching border tint, so a month
+reads as green and red days at a glance. The wash is deliberately not scaled by
+magnitude: a large losing day carries no more visual force than a small one.
+Sign is instant; weight is left to the signed figures and the week and month
+totals, which is where a trader reads "which days moved the account?". The same
+tone language echoes, quietly, as a left edge on stat tiles, tying tiles,
 calendar, and charts into one visual system. The boldness is spent here, where it
 serves the reading; it is spent nowhere else.
 
