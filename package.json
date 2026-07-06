@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src e2e --no-error-on-unmatched-pattern",
-    "e2e": "playwright test"
+    "e2e": "playwright test --project=e2e",
+    "screenshot": "playwright test --project=screenshot"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",

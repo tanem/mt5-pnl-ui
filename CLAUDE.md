@@ -15,6 +15,7 @@ npm ci               # install
 npm run dev          # dev server (Vite; no CSP — see Gotchas)
 npm test             # unit tests (Vitest + Testing Library, jsdom)
 npm run e2e          # Playwright end-to-end tests (real worker, real build)
+npm run screenshot   # regenerate docs/screenshot.png (Overview, e2e fixture)
 npm run build        # tsc --noEmit && vite build (injects the CSP)
 npm run typecheck    # tsc --noEmit only
 npm run lint         # eslint src e2e
@@ -103,6 +104,10 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   (the vendored exporter release), `schema/snapshot.schema.json` (the
   vendored schema file itself), and `SUPPORTED_SCHEMA` in
   `src/lib/snapshot/version.ts`. Update all three in the same change.
+- **`docs/screenshot.png` is generated**, by `npm run screenshot` (a
+  Playwright project excluded from `npm run e2e`, capturing the
+  Overview view from the synthetic e2e fixture). Refresh and commit it
+  after visible UI changes; never replace it with a hand-taken image.
 
 ## Conventions
 
