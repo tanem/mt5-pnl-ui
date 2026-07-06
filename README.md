@@ -84,7 +84,8 @@ picker, or (Chromium browsers only) a saved file handle:
   max drawdown, trade count, average win/loss, costs), a cumulative net
   P&L curve, and monthly/last-30-days bar charts.
 - **Calendar** — a month grid with one cell per trading day, coloured by
-  net P&L sign and shaded by magnitude, with a running month total.
+  net P&L sign and shaded by magnitude, plus a week-total column and a
+  running month total.
 - **Trades** — closed deals, open positions, and cash flows in sortable,
   virtualised tables (closed deals also carry a computed net column).
 - **Strategies** — the same summary statistics as Overview, broken down

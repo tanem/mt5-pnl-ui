@@ -17,6 +17,9 @@ test("decrypts a snapshot and renders the dashboard", async ({ page }) => {
   // Navigate all views
   await page.getByRole("link", { name: "Calendar" }).click();
   await expect(page.getByRole("grid").first()).toBeVisible();
+  await expect(
+    page.getByRole("columnheader", { name: "Week" }).first(),
+  ).toBeVisible();
   await page.getByRole("link", { name: "Trades" }).click();
   await expect(page.getByRole("tab", { name: /closed deals/i })).toBeVisible();
   await page.getByRole("link", { name: "Strategies" }).click();

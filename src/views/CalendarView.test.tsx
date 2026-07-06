@@ -49,3 +49,24 @@ test("month navigation moves to the previous month", async () => {
   await user.click(screen.getByRole("button", { name: /previous month/i }));
   expect(screen.getByText("May 2025")).toBeInTheDocument();
 });
+
+test("week column totals net, trades, and traded days for its row", () => {
+  const thu = Date.UTC(2025, 5, 12, 10) / 1000; // Thu 2025-06-12
+  const fri = Date.UTC(2025, 5, 13, 10) / 1000; // Fri 2025-06-13
+  appStore.setState({
+    status: "ready",
+    snapshot: makeSnapshot({
+      closed_deals: [
+        deal({ time: thu, profit: 10, commission: 0 }),
+        deal({ time: thu, profit: -4, commission: 0 }),
+        deal({ time: fri, profit: 5, commission: 0 }),
+      ],
+    }),
+  });
+  render(<CalendarView />);
+  // June 2025 starts on a Sunday: week 1 is Jun 1 alone, week 3 is Jun 9-15.
+  const week = screen.getByRole("gridcell", { name: /week 3 total/i });
+  expect(within(week).getByText("+11.00")).toBeInTheDocument();
+  expect(within(week).getByText("3 trades · 2 days")).toBeInTheDocument();
+  expect(screen.getByRole("columnheader", { name: "Week" })).toBeInTheDocument();
+});

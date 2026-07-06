@@ -3,7 +3,7 @@ import { useCurrencyGroups } from "../store/selectors";
 import { computeStats } from "../lib/derive/stats";
 import { equityCurve, maxDrawdown } from "../lib/derive/equity";
 import { bucketByDayUTC, bucketByMonthUTC, dayKeyUTC } from "../lib/derive/buckets";
-import { money, pct, ratio, signedMoney } from "../lib/format";
+import { money, num, pct, ratio, signedMoney } from "../lib/format";
 import { axis, LINE, NEG, POS } from "../lib/chartTheme";
 import StatTile from "../components/StatTile";
 import Chart from "../components/Chart";
@@ -16,6 +16,8 @@ function tone(v: number): "pos" | "neg" | "neutral" {
 function signColours(values: number[]): { value: number; itemStyle: { color: string } }[] {
   return values.map((v) => ({ value: v, itemStyle: { color: v >= 0 ? POS : NEG } }));
 }
+
+const tooltipValue = (v: unknown) => num(Number(v));
 
 function CurrencySection({ currency, deals }: { currency: string; deals: ClosedDeal[] }) {
   const stats = useMemo(() => computeStats(deals), [deals]);
@@ -60,7 +62,7 @@ function CurrencySection({ currency, deals }: { currency: string; deals: ClosedD
           grid: { left: 60, right: 16, top: 16, bottom: 24 },
           xAxis: { type: "time", ...axis },
           yAxis: { type: "value", ...axis },
-          tooltip: { trigger: "axis" },
+          tooltip: { trigger: "axis", valueFormatter: tooltipValue },
           series: [{
             type: "line",
             showSymbol: false,
@@ -77,7 +79,7 @@ function CurrencySection({ currency, deals }: { currency: string; deals: ClosedD
             grid: { left: 60, right: 16, top: 16, bottom: 24 },
             xAxis: { type: "category", data: monthly.keys, ...axis },
             yAxis: { type: "value", ...axis },
-            tooltip: {},
+            tooltip: { valueFormatter: tooltipValue },
             series: [{ type: "bar", data: signColours(monthly.nets) }],
           }}
         />
@@ -87,7 +89,7 @@ function CurrencySection({ currency, deals }: { currency: string; deals: ClosedD
             grid: { left: 60, right: 16, top: 16, bottom: 24 },
             xAxis: { type: "category", data: daily.keys, ...axis },
             yAxis: { type: "value", ...axis },
-            tooltip: {},
+            tooltip: { valueFormatter: tooltipValue },
             series: [{ type: "bar", data: signColours(daily.nets) }],
           }}
         />

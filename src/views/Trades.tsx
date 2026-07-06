@@ -12,12 +12,8 @@ import { useApp } from "../store/app";
 import { useAccounts, useFilteredDeals } from "../store/selectors";
 import { applyFilters } from "../lib/derive/filters";
 import { dealNet } from "../lib/derive/stats";
+import { num } from "../lib/format";
 import type { CashFlow, ClosedDeal, OpenPosition } from "../lib/snapshot/types";
-
-const grouped = new Intl.NumberFormat("en-GB", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
 
 function iso(timeSec: number): string {
   return new Date(timeSec * 1000).toISOString().replace(".000Z", "Z");
@@ -64,6 +60,11 @@ function useLabelByLogin(): Map<number, string> {
 
 const col = createColumnHelper<ClosedDeal>();
 
+// Columns holding figures: right-aligned, ledger style.
+const NUMERIC_COLS = new Set([
+  "volume", "price", "profit", "swap", "commission", "fee", "net",
+]);
+
 function ClosedDeals() {
   const deals = useFilteredDeals();
   const labels = useLabelByLogin();
@@ -73,23 +74,25 @@ function ClosedDeals() {
 
   const columns = useMemo(
     () => [
-      col.accessor("time", { header: "Time", cell: (c) => iso(c.getValue()) }),
+      col.accessor("time", { header: "Time", size: 185, cell: (c) => iso(c.getValue()) }),
       col.accessor("account", {
         header: "Account",
+        size: 130,
         cell: (c) => labels.get(c.getValue()) ?? String(c.getValue()),
       }),
-      col.accessor("symbol", { header: "Symbol" }),
-      col.accessor("magic", { header: "Magic" }),
-      col.accessor("volume", { header: "Volume" }),
-      col.accessor("price", { header: "Price" }),
-      col.accessor("profit", { header: "Profit", cell: (c) => grouped.format(c.getValue()) }),
-      col.accessor("swap", { header: "Swap", cell: (c) => grouped.format(c.getValue()) }),
-      col.accessor("commission", { header: "Commission", cell: (c) => grouped.format(c.getValue()) }),
-      col.accessor("fee", { header: "Fee", cell: (c) => grouped.format(c.getValue()) }),
+      col.accessor("symbol", { header: "Symbol", size: 95 }),
+      col.accessor("magic", { header: "Magic", size: 80 }),
+      col.accessor("volume", { header: "Volume", size: 80 }),
+      col.accessor("price", { header: "Price", size: 95 }),
+      col.accessor("profit", { header: "Profit", size: 95, cell: (c) => num(c.getValue()) }),
+      col.accessor("swap", { header: "Swap", size: 80, cell: (c) => num(c.getValue()) }),
+      col.accessor("commission", { header: "Commission", size: 110, cell: (c) => num(c.getValue()) }),
+      col.accessor("fee", { header: "Fee", size: 75, cell: (c) => num(c.getValue()) }),
       col.accessor((d) => dealNet(d), {
         id: "net",
         header: "Net",
-        cell: (c) => grouped.format(c.getValue()),
+        size: 95,
+        cell: (c) => num(c.getValue()),
       }),
     ],
     [labels],
@@ -123,14 +126,20 @@ function ClosedDeals() {
       ref={parentRef}
       className="max-h-[70vh] overflow-auto rounded-md border border-border"
     >
-      <table className="w-full font-mono text-sm tabular-nums">
+      <table
+        className="w-full table-fixed font-mono text-sm tabular-nums"
+        style={{ minWidth: table.getTotalSize() }}
+      >
         <thead className="sticky top-0 z-10 bg-surface-2">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((h) => (
                 <th
                   key={h.id}
-                  className="border-b border-border p-2 text-left text-xs tracking-wide text-muted uppercase"
+                  style={{ width: h.getSize() }}
+                  className={`border-b border-border p-2 text-xs tracking-wide text-muted uppercase ${
+                    NUMERIC_COLS.has(h.column.id) ? "text-right" : "text-left"
+                  }`}
                 >
                   <button
                     type="button"
@@ -165,7 +174,10 @@ function ClosedDeals() {
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className="p-2"
+                    style={{ width: cell.column.getSize() }}
+                    className={`p-2 whitespace-nowrap ${
+                      NUMERIC_COLS.has(cell.column.id) ? "text-right" : "text-left"
+                    }`}
                     data-testid={`cell-${cell.column.id}`}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -192,25 +204,34 @@ function OpenPositions() {
     <table className="w-full font-mono text-sm tabular-nums">
       <thead className="bg-surface-2">
         <tr>
-          {["Opened", "Account", "Symbol", "Magic", "Volume", "Open", "Current", "SL", "TP", "Profit", "Swap"].map((h) => (
-            <th key={h} className="border-b border-border p-2 text-left text-xs tracking-wide text-muted uppercase">{h}</th>
+          {([
+            ["Opened", false], ["Account", false], ["Symbol", false], ["Magic", false],
+            ["Volume", true], ["Open", true], ["Current", true], ["SL", true],
+            ["TP", true], ["Profit", true], ["Swap", true],
+          ] as const).map(([h, numeric]) => (
+            <th
+              key={h}
+              className={`border-b border-border p-2 text-xs tracking-wide text-muted uppercase ${numeric ? "text-right" : "text-left"}`}
+            >
+              {h}
+            </th>
           ))}
         </tr>
       </thead>
       <tbody>
         {rows.map((p: OpenPosition) => (
           <tr key={`${p.account}-${p.ticket}`} className="border-b border-border transition-colors hover:bg-surface-2">
-            <td className="p-2">{iso(p.time)}</td>
-            <td className="p-2">{labels.get(p.account) ?? p.account}</td>
-            <td className="p-2">{p.symbol}</td>
-            <td className="p-2">{p.magic}</td>
-            <td className="p-2">{p.volume}</td>
-            <td className="p-2">{p.price_open}</td>
-            <td className="p-2">{p.price_current}</td>
-            <td className="p-2">{p.sl}</td>
-            <td className="p-2">{p.tp}</td>
-            <td className="p-2">{grouped.format(p.profit)}</td>
-            <td className="p-2">{grouped.format(p.swap)}</td>
+            <td className="p-2 whitespace-nowrap">{iso(p.time)}</td>
+            <td className="p-2 whitespace-nowrap">{labels.get(p.account) ?? p.account}</td>
+            <td className="p-2 whitespace-nowrap">{p.symbol}</td>
+            <td className="p-2 whitespace-nowrap">{p.magic}</td>
+            <td className="p-2 whitespace-nowrap text-right">{p.volume}</td>
+            <td className="p-2 whitespace-nowrap text-right">{p.price_open}</td>
+            <td className="p-2 whitespace-nowrap text-right">{p.price_current}</td>
+            <td className="p-2 whitespace-nowrap text-right">{p.sl}</td>
+            <td className="p-2 whitespace-nowrap text-right">{p.tp}</td>
+            <td className="p-2 whitespace-nowrap text-right">{num(p.profit)}</td>
+            <td className="p-2 whitespace-nowrap text-right">{num(p.swap)}</td>
           </tr>
         ))}
       </tbody>
@@ -234,19 +255,26 @@ function CashFlows() {
     <table className="w-full font-mono text-sm tabular-nums">
       <thead className="bg-surface-2">
         <tr>
-          {["Time", "Account", "Type", "Amount", "Comment"].map((h) => (
-            <th key={h} className="border-b border-border p-2 text-left text-xs tracking-wide text-muted uppercase">{h}</th>
+          {([
+            ["Time", false], ["Account", false], ["Type", true], ["Amount", true], ["Comment", false],
+          ] as const).map(([h, numeric]) => (
+            <th
+              key={h}
+              className={`border-b border-border p-2 text-xs tracking-wide text-muted uppercase ${numeric ? "text-right" : "text-left"}`}
+            >
+              {h}
+            </th>
           ))}
         </tr>
       </thead>
       <tbody>
         {rows.map((f: CashFlow) => (
           <tr key={`${f.account}-${f.ticket}`} className="border-b border-border transition-colors hover:bg-surface-2">
-            <td className="p-2">{iso(f.time)}</td>
-            <td className="p-2">{labels.get(f.account) ?? f.account}</td>
-            <td className="p-2">{f.type}</td>
-            <td className="p-2">{grouped.format(f.profit)}</td>
-            <td className="p-2">{f.comment}</td>
+            <td className="p-2 whitespace-nowrap">{iso(f.time)}</td>
+            <td className="p-2 whitespace-nowrap">{labels.get(f.account) ?? f.account}</td>
+            <td className="p-2 whitespace-nowrap text-right">{f.type}</td>
+            <td className="p-2 whitespace-nowrap text-right">{num(f.profit)}</td>
+            <td className="p-2 whitespace-nowrap">{f.comment}</td>
           </tr>
         ))}
       </tbody>
