@@ -17,6 +17,7 @@ npm test             # unit tests (Vitest)
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
 npm run e2e          # Playwright end-to-end tests
+npm run visual       # capture per-view screenshots to visual-review/ (inspection aid, not a test)
 ```
 
 `npm run build` runs the typecheck and the production build; it also

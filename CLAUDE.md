@@ -16,6 +16,7 @@ npm run dev          # dev server (Vite; no CSP — see Gotchas)
 npm test             # unit tests (Vitest + Testing Library, jsdom)
 npm run e2e          # Playwright end-to-end tests (real worker, real build)
 npm run screenshot   # regenerate docs/screenshot.png (Overview, e2e fixture)
+npm run visual       # capture per-view screenshots to visual-review/ (inspection aid, not a test)
 npm run build        # tsc --noEmit && vite build (injects the CSP)
 npm run typecheck    # tsc --noEmit only
 npm run lint         # eslint src e2e
