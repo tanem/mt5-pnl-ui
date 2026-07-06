@@ -2,9 +2,12 @@
 
 [![Licence](https://img.shields.io/github/license/tanem/mt5-pnl-ui)](LICENSE)
 [![ci](https://github.com/tanem/mt5-pnl-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/tanem/mt5-pnl-ui/actions/workflows/ci.yml)
-[![Pages](https://img.shields.io/badge/pages-live-blue)](https://tanem.github.io/mt5-pnl-ui/)
 
 > Reads an encrypted MT5 snapshot, renders a P&L dashboard in the browser.
+
+![The Overview view: headline statistic cards, a cumulative net P&L
+curve, and monthly bar charts, rendered one section per account
+currency](docs/screenshot.png)
 
 ```
    ┌──────────────┐  writes   ┌────────────────┐  reads   ┌──────────────┐
@@ -18,21 +21,12 @@
    └──────────────┘
 ```
 
-The exporter runs on the Windows host where MT5 lives and writes one
-encrypted file. This app runs in a browser — any OS, no install — decrypts
+The [exporter](https://github.com/tanem/mt5-pnl-exporter) runs on the
+Windows host where MT5 lives and writes one
+[age](https://age-encryption.org)-encrypted file. This app runs in a
+browser — any OS, no install — decrypts
 that file in memory, and renders the same figures as
 [mt5-pnl-cli](https://github.com/tanem/mt5-pnl-cli), visually.
-
-## Contents
-
-- [Why](#why)
-- [Use it](#use-it)
-- [Opening a snapshot](#opening-a-snapshot)
-- [Views](#views)
-- [Semantics](#semantics)
-- [Schema compatibility](#schema-compatibility)
-- [Contributing](#contributing)
-- [Licence](#licence)
 
 ## Why
 
