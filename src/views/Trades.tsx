@@ -205,7 +205,7 @@ function OpenPositions() {
       <thead className="bg-surface-2">
         <tr>
           {([
-            ["Opened", false], ["Account", false], ["Symbol", false], ["Magic", true],
+            ["Opened", false], ["Account", false], ["Symbol", false], ["Magic", false],
             ["Volume", true], ["Open", true], ["Current", true], ["SL", true],
             ["TP", true], ["Profit", true], ["Swap", true],
           ] as const).map(([h, numeric]) => (
@@ -224,7 +224,7 @@ function OpenPositions() {
             <td className="p-2 whitespace-nowrap">{iso(p.time)}</td>
             <td className="p-2 whitespace-nowrap">{labels.get(p.account) ?? p.account}</td>
             <td className="p-2 whitespace-nowrap">{p.symbol}</td>
-            <td className="p-2 whitespace-nowrap text-right">{p.magic}</td>
+            <td className="p-2 whitespace-nowrap">{p.magic}</td>
             <td className="p-2 whitespace-nowrap text-right">{p.volume}</td>
             <td className="p-2 whitespace-nowrap text-right">{p.price_open}</td>
             <td className="p-2 whitespace-nowrap text-right">{p.price_current}</td>
