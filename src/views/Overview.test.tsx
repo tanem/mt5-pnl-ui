@@ -2,15 +2,26 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 
 vi.mock("../worker/client", () => ({ workerRunner: vi.fn() }));
+
+type CapturedOption = {
+  tooltip?: { valueFormatter?: (v: unknown) => string };
+};
+const captured = vi.hoisted(() => ({ options: [] as unknown[] }));
 vi.mock("../components/Chart", () => ({
-  default: ({ label }: { label: string }) => <div data-testid="chart">{label}</div>,
+  default: ({ label, option }: { label: string; option: unknown }) => {
+    captured.options.push(option);
+    return <div data-testid="chart">{label}</div>;
+  },
 }));
 
 import { appStore } from "../store/app";
 import Overview from "./Overview";
 import { account, deal, makeSnapshot } from "../../tests/helpers/fixture";
 
-beforeEach(() => appStore.getState().reset());
+beforeEach(() => {
+  appStore.getState().reset();
+  captured.options.length = 0;
+});
 
 test("renders tiles with CLI-matching figures for a single currency", () => {
   appStore.setState({
@@ -60,4 +71,19 @@ test("no losses → profit factor shows n/a", () => {
   });
   render(<Overview />);
   expect(screen.getByText("Profit factor").nextSibling).toHaveTextContent("n/a");
+});
+
+test("every chart tooltip formats values to 2 dp", () => {
+  appStore.setState({
+    status: "ready",
+    snapshot: makeSnapshot({
+      closed_deals: [deal({ profit: 10, commission: 0 })],
+    }),
+  });
+  render(<Overview />);
+  expect(captured.options).toHaveLength(3); // equity, monthly, daily
+  for (const raw of captured.options) {
+    const opt = raw as CapturedOption;
+    expect(opt.tooltip?.valueFormatter?.(2434.4699999999993)).toBe("2,434.47");
+  }
 });

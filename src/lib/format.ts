@@ -3,6 +3,11 @@ const grouped = new Intl.NumberFormat("en-GB", {
   maximumFractionDigits: 2,
 });
 
+/** "1,234.50" — grouped, 2 dp, no currency (chart tooltips, table figures). */
+export function num(v: number): string {
+  return grouped.format(v);
+}
+
 /** "1,234.50 USD" — deterministic, currency code as suffix (CLI style). */
 export function money(v: number, currency: string): string {
   return `${grouped.format(v)} ${currency}`;
