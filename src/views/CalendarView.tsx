@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { Fragment, useMemo, useState, type CSSProperties } from "react";
 import { useCurrencyGroups } from "../store/selectors";
 import { bucketByDayUTC, type Bucket } from "../lib/derive/buckets";
 import { signedMoney } from "../lib/format";
@@ -29,12 +29,57 @@ function latestDealTime(deals: ClosedDeal[]): number {
     : Date.now() / 1000;
 }
 
+function WeekCell({
+  index,
+  week,
+  days,
+}: {
+  index: number;
+  week: (string | null)[];
+  days: Map<string, Bucket>;
+}) {
+  let net = 0;
+  let trades = 0;
+  let tradedDays = 0;
+  for (const key of week) {
+    const b = key ? days.get(key) : undefined;
+    if (b) {
+      net += b.net;
+      trades += b.trades;
+      tradedDays++;
+    }
+  }
+  if (tradedDays === 0) return <div role="gridcell" aria-hidden className="min-h-16" />;
+  return (
+    <div
+      role="gridcell"
+      aria-label={`Week ${index + 1} total`}
+      className="min-h-16 rounded-md border border-border bg-surface-2 p-1.5 font-mono text-sm tabular-nums"
+    >
+      <div className="text-[0.7rem] tracking-wide text-muted uppercase">
+        W{index + 1}
+      </div>
+      <div className={`mt-0.5 font-semibold ${net >= 0 ? "text-pos" : "text-neg"}`}>
+        {signedMoney(net, "").trim()}
+      </div>
+      <div className="text-[0.7rem] text-muted">
+        {trades} trades · {tradedDays} {tradedDays === 1 ? "day" : "days"}
+      </div>
+    </div>
+  );
+}
+
 function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] }) {
   const [year, setYear] = useState(() => new Date(latestDealTime(deals) * 1000).getUTCFullYear());
   const [month0, setMonth0] = useState(() => new Date(latestDealTime(deals) * 1000).getUTCMonth());
 
   const days: Map<string, Bucket> = useMemo(() => bucketByDayUTC(deals), [deals]);
   const cells = useMemo(() => buildMonthCells(year, month0), [year, month0]);
+  const weeks = useMemo(() => {
+    const out: (string | null)[][] = [];
+    for (let i = 0; i < cells.length; i += 7) out.push(cells.slice(i, i + 7));
+    return out;
+  }, [cells]);
 
   const prefix = `${year}-${String(month0 + 1).padStart(2, "0")}`;
   let monthNet = 0;
@@ -81,7 +126,11 @@ function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] 
         </button>
       </div>
 
-      <div role="grid" aria-label={`${MONTHS[month0]} ${year}`} className="grid grid-cols-7 gap-1.5">
+      <div
+        role="grid"
+        aria-label={`${MONTHS[month0]} ${year}`}
+        className="grid grid-cols-[repeat(7,minmax(0,1fr))_minmax(0,1fr)] gap-1.5"
+      >
         {WEEKDAYS.map((w) => (
           <div
             key={w}
@@ -91,40 +140,51 @@ function MonthGrid({ currency, deals }: { currency: string; deals: ClosedDeal[] 
             {w}
           </div>
         ))}
-        {cells.map((key, i) =>
-          key === null ? (
-            <div key={i} role="gridcell" aria-hidden className="min-h-16" />
-          ) : (
-            <div
-              key={key}
-              role="gridcell"
-              aria-label={key.slice(8)}
-              data-tone={
-                days.get(key) ? (days.get(key)!.net >= 0 ? "pos" : "neg") : undefined
-              }
-              style={
-                days.get(key) && peak > 0
-                  ? ({
-                      "--heat": Math.abs(days.get(key)!.net) / peak,
-                    } as CSSProperties)
-                  : undefined
-              }
-              className="day-cell min-h-16 rounded-md bg-surface p-1.5 font-mono text-sm tabular-nums"
-            >
-              <div className="text-muted">{Number(key.slice(8))}</div>
-              {days.get(key) && (
-                <>
-                  <div className="mt-0.5 font-semibold text-text">
-                    {signedMoney(days.get(key)!.net, "").trim()}
-                  </div>
-                  <div className="text-[0.7rem] text-muted">
-                    {days.get(key)!.trades} trades
-                  </div>
-                </>
-              )}
-            </div>
-          ),
-        )}
+        <div
+          role="columnheader"
+          className="pb-1 text-center text-xs tracking-wide text-muted uppercase"
+        >
+          Week
+        </div>
+        {weeks.map((week, w) => (
+          <Fragment key={w}>
+            {week.map((key, i) =>
+              key === null ? (
+                <div key={i} role="gridcell" aria-hidden className="min-h-16" />
+              ) : (
+                <div
+                  key={key}
+                  role="gridcell"
+                  aria-label={key.slice(8)}
+                  data-tone={
+                    days.get(key) ? (days.get(key)!.net >= 0 ? "pos" : "neg") : undefined
+                  }
+                  style={
+                    days.get(key) && peak > 0
+                      ? ({
+                          "--heat": Math.abs(days.get(key)!.net) / peak,
+                        } as CSSProperties)
+                      : undefined
+                  }
+                  className="day-cell min-h-16 rounded-md bg-surface p-1.5 font-mono text-sm tabular-nums"
+                >
+                  <div className="text-muted">{Number(key.slice(8))}</div>
+                  {days.get(key) && (
+                    <>
+                      <div className="mt-0.5 font-semibold text-text">
+                        {signedMoney(days.get(key)!.net, "").trim()}
+                      </div>
+                      <div className="text-[0.7rem] text-muted">
+                        {days.get(key)!.trades} trades
+                      </div>
+                    </>
+                  )}
+                </div>
+              ),
+            )}
+            <WeekCell index={w} week={week} days={days} />
+          </Fragment>
+        ))}
       </div>
 
       <p className="mt-3 text-sm text-muted">
