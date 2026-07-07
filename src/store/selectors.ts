@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { useApp } from "./app";
 import { applyFilters } from "../lib/derive/filters";
 import { splitByCurrency } from "../lib/derive/currency";
+import { groupReturnsByCurrency } from "../lib/derive/returns";
+import type { ReturnsGroup } from "../lib/derive/returns";
 import type { AccountSnapshot, ClosedDeal } from "../lib/snapshot/types";
 
 export function useAccounts(): AccountSnapshot[] {
@@ -23,4 +25,24 @@ export function useCurrencyGroups(): Map<string, ClosedDeal[]> {
   const deals = useFilteredDeals();
   const accounts = useAccounts();
   return useMemo(() => splitByCurrency(deals, accounts), [deals, accounts]);
+}
+
+/**
+ * Lifetime returns per account currency. Applies only the account filter —
+ * never date/symbol/magic. Semantics are this repo's own (the account
+ * returns spec), not mirrored from mt5-pnl-cli.
+ */
+export function useReturnsGroups(): Map<string, ReturnsGroup> {
+  const snapshot = useApp((s) => s.snapshot);
+  const accounts = useApp((s) => s.filters.accounts);
+  return useMemo(
+    () =>
+      groupReturnsByCurrency(
+        snapshot?.accounts ?? [],
+        snapshot?.cash_flows ?? [],
+        snapshot?.closed_deals ?? [],
+        accounts,
+      ),
+    [snapshot, accounts],
+  );
 }

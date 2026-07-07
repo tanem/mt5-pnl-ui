@@ -31,6 +31,21 @@ export function deal(overrides: Partial<ClosedDeal> = {}): ClosedDeal {
   };
 }
 
+/** Balance-family cash-flow record — MT5 zeroes the trade fields. */
+export function flow(overrides: Partial<ClosedDeal> = {}): ClosedDeal {
+  return deal({
+    type: 2,
+    entry: 0,
+    magic: 0,
+    volume: 0,
+    price: 0,
+    profit: 1000,
+    commission: 0,
+    symbol: "",
+    ...overrides,
+  });
+}
+
 export function account(
   overrides: Partial<AccountSnapshot> = {},
 ): AccountSnapshot {

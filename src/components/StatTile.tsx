@@ -17,3 +17,8 @@ export default function StatTile({ label, value, tone = "neutral" }: Props) {
     </div>
   );
 }
+
+/** Sign → tile tone: positive pos, negative neg, zero neutral. */
+export function tone(v: number): "pos" | "neg" | "neutral" {
+  return v > 0 ? "pos" : v < 0 ? "neg" : "neutral";
+}

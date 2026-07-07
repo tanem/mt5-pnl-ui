@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { money, num, pct, ratio, signedMoney } from "./format";
+import { money, num, pct, ratio, signedMoney, signedPct } from "./format";
 
 test("money is deterministic: grouped, 2 dp, code suffix", () => {
   expect(money(1234.5, "USD")).toBe("1,234.50 USD");
@@ -23,4 +23,12 @@ test("num is grouped, 2 dp, no currency — swallows float noise", () => {
   expect(num(2434.4699999999993)).toBe("2,434.47");
   expect(num(-5)).toBe("-5.00");
   expect(num(0)).toBe("0.00");
+});
+
+test("signedPct formats signed percentages from fractions", () => {
+  expect(signedPct(0.35)).toBe("+35.0%");
+  expect(signedPct(-0.031)).toBe("-3.1%");
+  expect(signedPct(1.5)).toBe("+150.0%");
+  expect(signedPct(0)).toBe("0.0%");
+  expect(signedPct(null)).toBe("n/a");
 });
