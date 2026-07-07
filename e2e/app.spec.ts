@@ -62,14 +62,19 @@ test("renders lifetime account returns that survive filtering", async ({ page })
   await page.getByLabel(/passphrase/i).fill("e2e-passphrase");
   await page.getByRole("button", { name: /unlock/i }).click();
 
-  // USD: deposited 10,000; withdrawn 2,000; balance 8,045; equity 8,200
-  // → floating +155, profit +200, gain +2.0% (reconciles: 8,000 + 45).
+  // USD (Trend EA + Grid EA): external deposited 10,000; external withdrawn
+  // 2,000; internal transfer 500; floating +155; profit +200; gain +2.0%.
   const usd = page.getByRole("region", { name: /usd account returns/i });
   await expect(usd.getByText("10,000.00 USD")).toBeVisible();
   await expect(usd.getByText("2,000.00 USD")).toBeVisible();
   await expect(usd.getByText("+155.00 USD")).toBeVisible();
   await expect(usd.getByText("+200.00 USD")).toBeVisible();
-  await expect(usd.getByText("+2.0%")).toBeVisible();
+  // scoped to the stat tile: the per-account table below also has a Gain
+  // column, and Trend EA's per-account gain happens to match too.
+  await expect(usd.locator(".stat-value", { hasText: "+2.0%" })).toBeVisible();
+  await expect(usd.getByText("500.00 USD")).toBeVisible(); // Transferred tile
+  // two USD accounts → per-account table, transfer legs kept per account
+  await expect(usd.getByRole("row", { name: /grid ea/i })).toBeVisible();
 
   // EUR: deposited 4,000 against balance 5,000 with only 4.50 of deal nets
   // → the deliberate reconciliation failure; profit 1,000, gain +25.0%.
