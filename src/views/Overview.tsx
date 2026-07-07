@@ -5,13 +5,9 @@ import { equityCurve, maxDrawdown } from "../lib/derive/equity";
 import { bucketByDayUTC, bucketByMonthUTC, dayKeyUTC } from "../lib/derive/buckets";
 import { money, num, pct, ratio, signedMoney } from "../lib/format";
 import { axis, LINE, NEG, POS } from "../lib/chartTheme";
-import StatTile from "../components/StatTile";
+import StatTile, { tone } from "../components/StatTile";
 import Chart from "../components/Chart";
 import type { ClosedDeal } from "../lib/snapshot/types";
-
-function tone(v: number): "pos" | "neg" | "neutral" {
-  return v > 0 ? "pos" : v < 0 ? "neg" : "neutral";
-}
 
 function signColours(values: number[]): { value: number; itemStyle: { color: string } }[] {
   return values.map((v) => ({ value: v, itemStyle: { color: v >= 0 ? POS : NEG } }));
