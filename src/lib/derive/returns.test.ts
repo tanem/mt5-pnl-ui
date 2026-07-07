@@ -166,3 +166,56 @@ test("an exact time-gap tie is broken by ticket order", () => {
   expect(paired.has(after)).toBe(true);
   expect(paired.has(before)).toBe(false);
 });
+
+test("group totals exclude internal transfers and report them separately", () => {
+  const accounts = [
+    account({ login: 111, currency: "USD", balance: 700, equity: 700 }),
+    account({ login: 222, currency: "USD", balance: 300, equity: 300 }),
+  ];
+  const flows = [
+    flow({ account: 111, ticket: 1, profit: 1000, time_msc: 0 }),
+    // internal transfer 111 → 222, legs 30s apart
+    flow({ account: 111, ticket: 2, profit: -300, time_msc: 2_000_000 }),
+    flow({ account: 222, ticket: 3, profit: 300, time_msc: 2_030_000 }),
+  ];
+  const usd = groupReturnsByCurrency(accounts, flows, [], null).get("USD")!;
+  expect(usd.totals.deposits).toBe(1000); // external only
+  expect(usd.totals.withdrawals).toBe(0); // external only
+  expect(usd.totals.transfers).toBe(300);
+  expect(usd.totals.profit).toBe(0); // 700 + 300 − 1000, transfer legs cancel
+  expect(usd.totals.gainPct).toBe(0);
+  // per-account figures keep the transfer legs
+  const a = usd.accounts.find((r) => r.login === 111)!;
+  const b = usd.accounts.find((r) => r.login === 222)!;
+  expect(a.withdrawals).toBe(300);
+  expect(b.deposits).toBe(300);
+});
+
+test("a transfer to a filtered-out account stays an external withdrawal", () => {
+  const accounts = [
+    account({ login: 111, currency: "USD", balance: 700, equity: 700 }),
+    account({ login: 222, currency: "USD", balance: 300, equity: 300 }),
+  ];
+  const flows = [
+    flow({ account: 111, ticket: 1, profit: 1000, time_msc: 0 }),
+    flow({ account: 111, ticket: 2, profit: -300, time_msc: 2_000_000 }),
+    flow({ account: 222, ticket: 3, profit: 300, time_msc: 2_030_000 }),
+  ];
+  const usd = groupReturnsByCurrency(accounts, flows, [], [111]).get("USD")!;
+  expect(usd.totals.withdrawals).toBe(300);
+  expect(usd.totals.transfers).toBe(0);
+});
+
+test("group gain is null when all funding was internal", () => {
+  const accounts = [
+    account({ login: 111, currency: "USD", balance: 0, equity: 0 }),
+    account({ login: 222, currency: "USD", balance: 300, equity: 300 }),
+  ];
+  const flows = [
+    flow({ account: 111, ticket: 1, profit: -300, time_msc: 0 }),
+    flow({ account: 222, ticket: 2, profit: 300, time_msc: 0 }),
+  ];
+  const usd = groupReturnsByCurrency(accounts, flows, [], null).get("USD")!;
+  expect(usd.totals.deposits).toBe(0);
+  expect(usd.totals.gainPct).toBeNull();
+});
