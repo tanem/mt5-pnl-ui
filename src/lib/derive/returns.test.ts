@@ -152,3 +152,17 @@ test("each leg pairs at most once, preferring the nearest in time", () => {
   expect(paired.has(near)).toBe(true);
   expect(paired.has(far)).toBe(false); // stays an ordinary deposit
 });
+
+test("an exact time-gap tie is broken by ticket order", () => {
+  const accounts = [
+    account({ login: 111, currency: "USD" }),
+    account({ login: 222, currency: "USD" }),
+  ];
+  const out = flow({ account: 111, ticket: 5, profit: -300, time_msc: 1_000_000 });
+  // equal 1,000 ms gaps on either side; the lower ticket must win
+  const before = flow({ account: 222, ticket: 10, profit: 300, time_msc: 999_000 });
+  const after = flow({ account: 222, ticket: 1, profit: 300, time_msc: 1_001_000 });
+  const paired = pairInternalTransfers([out, before, after], accounts);
+  expect(paired.has(after)).toBe(true);
+  expect(paired.has(before)).toBe(false);
+});
