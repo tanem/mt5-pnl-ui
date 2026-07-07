@@ -459,8 +459,7 @@ export function pairInternalTransfers(
         continue;
       const gap = Math.abs(leg.time_msc - out.time_msc);
       if (gap > TRANSFER_WINDOW_MS) continue;
-      // strict < keeps the earliest-sorted leg on a tie
-      if (gap < bestGap) {
+      if (gap < bestGap || (gap === bestGap && best !== null && leg.ticket < best.ticket)) {
         best = leg;
         bestGap = gap;
       }
