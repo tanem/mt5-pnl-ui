@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { useCurrencyGroups } from "../store/selectors";
+import { useApp } from "../store/app";
+import { useCurrencyGroups, useReturnsGroups } from "../store/selectors";
 import { computeStats } from "../lib/derive/stats";
 import { equityCurve, maxDrawdown } from "../lib/derive/equity";
 import { bucketByDayUTC, bucketByMonthUTC, dayKeyUTC } from "../lib/derive/buckets";
@@ -7,7 +8,9 @@ import { money, num, pct, ratio, signedMoney } from "../lib/format";
 import { axis, LINE, NEG, POS } from "../lib/chartTheme";
 import StatTile, { tone } from "../components/StatTile";
 import Chart from "../components/Chart";
+import ReturnsBand from "../components/ReturnsBand";
 import type { ClosedDeal } from "../lib/snapshot/types";
+import type { ReturnsGroup } from "../lib/derive/returns";
 
 function signColours(values: number[]): { value: number; itemStyle: { color: string } }[] {
   return values.map((v) => ({ value: v, itemStyle: { color: v >= 0 ? POS : NEG } }));
@@ -15,7 +18,17 @@ function signColours(values: number[]): { value: number; itemStyle: { color: str
 
 const tooltipValue = (v: unknown) => num(Number(v));
 
-function CurrencySection({ currency, deals }: { currency: string; deals: ClosedDeal[] }) {
+function CurrencySection({
+  currency,
+  deals,
+  returns,
+  filtersActive,
+}: {
+  currency: string;
+  deals: ClosedDeal[];
+  returns: ReturnsGroup | undefined;
+  filtersActive: boolean;
+}) {
   const stats = useMemo(() => computeStats(deals), [deals]);
   const curve = useMemo(() => equityCurve(deals), [deals]);
   const dd = useMemo(() => maxDrawdown(curve), [curve]);
@@ -41,75 +54,101 @@ function CurrencySection({ currency, deals }: { currency: string; deals: ClosedD
       <h2 className="mb-3 font-mono text-sm font-semibold tracking-widest text-muted uppercase">
         {currency}
       </h2>
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label="Net P&L" value={signedMoney(stats.netPnl, currency)} tone={tone(stats.netPnl)} />
-        <StatTile label="Win rate" value={pct(stats.winRate)} />
-        <StatTile label="Profit factor" value={ratio(stats.profitFactor)} />
-        <StatTile label="Max drawdown" value={money(dd, currency)} tone={tone(dd)} />
-        <StatTile label="Trades" value={String(stats.trades)} />
-        <StatTile label="Avg win" value={stats.avgWin === null ? "n/a" : money(stats.avgWin, currency)} />
-        <StatTile label="Avg loss" value={stats.avgLoss === null ? "n/a" : money(stats.avgLoss, currency)} />
-        <StatTile label="Costs" value={money(stats.costs, currency)} tone={tone(stats.costs)} />
-      </div>
+      {deals.length > 0 ? (
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile label="Net P&L" value={signedMoney(stats.netPnl, currency)} tone={tone(stats.netPnl)} />
+          <StatTile label="Win rate" value={pct(stats.winRate)} />
+          <StatTile label="Profit factor" value={ratio(stats.profitFactor)} />
+          <StatTile label="Max drawdown" value={money(dd, currency)} tone={tone(dd)} />
+          <StatTile label="Trades" value={String(stats.trades)} />
+          <StatTile label="Avg win" value={stats.avgWin === null ? "n/a" : money(stats.avgWin, currency)} />
+          <StatTile label="Avg loss" value={stats.avgLoss === null ? "n/a" : money(stats.avgLoss, currency)} />
+          <StatTile label="Costs" value={money(stats.costs, currency)} tone={tone(stats.costs)} />
+        </div>
+      ) : (
+        <p className="mb-4 text-muted">No closed deals match the current filters.</p>
+      )}
+      {returns && (
+        <ReturnsBand currency={currency} group={returns} filtersActive={filtersActive} />
+      )}
+      {deals.length > 0 && (
+        <>
+          <Chart
+            label={`Cumulative net P&L (${currency})`}
+            option={{
+              grid: { left: 60, right: 16, top: 16, bottom: 24 },
+              xAxis: { type: "time", ...axis },
+              yAxis: { type: "value", ...axis },
+              tooltip: { trigger: "axis", valueFormatter: tooltipValue },
+              series: [{
+                type: "line",
+                showSymbol: false,
+                lineStyle: { color: LINE, width: 2 },
+                data: curve.map((p) => [p.timeMsc, p.cum]),
+              }],
+            }}
+          />
 
-      <Chart
-        label={`Cumulative net P&L (${currency})`}
-        option={{
-          grid: { left: 60, right: 16, top: 16, bottom: 24 },
-          xAxis: { type: "time", ...axis },
-          yAxis: { type: "value", ...axis },
-          tooltip: { trigger: "axis", valueFormatter: tooltipValue },
-          series: [{
-            type: "line",
-            showSymbol: false,
-            lineStyle: { color: LINE, width: 2 },
-            data: curve.map((p) => [p.timeMsc, p.cum]),
-          }],
-        }}
-      />
-
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Chart
-          label={`Monthly net P&L (${currency})`}
-          option={{
-            grid: { left: 60, right: 16, top: 16, bottom: 24 },
-            xAxis: { type: "category", data: monthly.keys, ...axis },
-            yAxis: { type: "value", ...axis },
-            tooltip: { valueFormatter: tooltipValue },
-            series: [{ type: "bar", data: signColours(monthly.nets) }],
-          }}
-        />
-        <Chart
-          label={`Last 30 days net P&L (${currency})`}
-          option={{
-            grid: { left: 60, right: 16, top: 16, bottom: 24 },
-            xAxis: { type: "category", data: daily.keys, ...axis },
-            yAxis: { type: "value", ...axis },
-            tooltip: { valueFormatter: tooltipValue },
-            series: [{ type: "bar", data: signColours(daily.nets) }],
-          }}
-        />
-      </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <Chart
+              label={`Monthly net P&L (${currency})`}
+              option={{
+                grid: { left: 60, right: 16, top: 16, bottom: 24 },
+                xAxis: { type: "category", data: monthly.keys, ...axis },
+                yAxis: { type: "value", ...axis },
+                tooltip: { valueFormatter: tooltipValue },
+                series: [{ type: "bar", data: signColours(monthly.nets) }],
+              }}
+            />
+            <Chart
+              label={`Last 30 days net P&L (${currency})`}
+              option={{
+                grid: { left: 60, right: 16, top: 16, bottom: 24 },
+                xAxis: { type: "category", data: daily.keys, ...axis },
+                yAxis: { type: "value", ...axis },
+                tooltip: { valueFormatter: tooltipValue },
+                series: [{ type: "bar", data: signColours(daily.nets) }],
+              }}
+            />
+          </div>
+        </>
+      )}
     </section>
   );
 }
 
 export default function Overview() {
-  const groups = useCurrencyGroups();
-  const entries = [...groups.entries()];
+  const dealGroups = useCurrencyGroups();
+  const returnsGroups = useReturnsGroups();
+  const filtersActive = useApp(
+    (s) =>
+      s.filters.from !== null ||
+      s.filters.to !== null ||
+      s.filters.symbol !== null ||
+      s.filters.magic !== null,
+  );
+  const currencies = [
+    ...new Set([...returnsGroups.keys(), ...dealGroups.keys()]),
+  ].sort();
   return (
     <div>
-      {entries.length > 1 && (
+      {currencies.length > 1 && (
         <p className="mb-6 border-l-2 border-accent bg-surface py-2 pr-3 pl-3 text-sm text-muted">
           Accounts in scope span multiple currencies; figures are shown per
           currency and never combined.
         </p>
       )}
-      {entries.map(([currency, deals]) => (
-        <CurrencySection key={currency} currency={currency} deals={deals} />
+      {currencies.map((currency) => (
+        <CurrencySection
+          key={currency}
+          currency={currency}
+          deals={dealGroups.get(currency) ?? []}
+          returns={returnsGroups.get(currency)}
+          filtersActive={filtersActive}
+        />
       ))}
-      {entries.length === 0 && (
-        <p className="text-muted">No closed deals match the current filters.</p>
+      {currencies.length === 0 && (
+        <p className="text-muted">No accounts match the current filters.</p>
       )}
     </div>
   );
