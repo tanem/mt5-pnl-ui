@@ -104,5 +104,5 @@ test("shows the transferred tile only when internal transfers exist", () => {
   render(<ReturnsBand currency="USD" group={group} filtersActive={false} />);
   const band = screen.getByRole("region", { name: /usd account returns/i });
   expect(within(band).getByText("Transferred").nextSibling).toHaveTextContent("300.00 USD");
-  expect(within(band).getAllByText("Deposited")[0].nextSibling).toHaveTextContent("1,000.00 USD");
+  expect(within(band).getAllByText("Deposited")[0]!.nextSibling).toHaveTextContent("1,000.00 USD");
 });
