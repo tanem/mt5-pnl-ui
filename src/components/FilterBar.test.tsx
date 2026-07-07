@@ -18,8 +18,8 @@ beforeEach(() => {
         account({ login: 222, label: "Scalper EA" }),
       ],
       closed_deals: [
-        deal({ account: 111, symbol: "EURUSD" }),
-        deal({ account: 222, symbol: "XAUUSD" }),
+        deal({ account: 111, symbol: "EURUSD", magic: 100 }),
+        deal({ account: 222, symbol: "XAUUSD", magic: 200 }),
       ],
     }),
   });
@@ -47,15 +47,20 @@ test("date inputs set the UTC range filter", () => {
   expect(appStore.getState().filters.to).toBe("2025-06-30");
 });
 
-test("symbol select and magic input set exact filters, empty clears", async () => {
+test("symbol select sets an exact filter, empty clears", async () => {
   const user = userEvent.setup();
   render(<FilterBar />);
   await user.selectOptions(screen.getByLabelText(/symbol/i), "EURUSD");
   expect(appStore.getState().filters.symbol).toBe("EURUSD");
   await user.selectOptions(screen.getByLabelText(/symbol/i), "");
   expect(appStore.getState().filters.symbol).toBeNull();
-  await user.type(screen.getByLabelText(/magic/i), "100");
-  expect(appStore.getState().filters.magic).toBe(100);
-  await user.clear(screen.getByLabelText(/magic/i));
-  expect(appStore.getState().filters.magic).toBeNull();
+});
+
+test("magic checkboxes narrow to the remaining magics, all on = no filter", async () => {
+  const user = userEvent.setup();
+  render(<FilterBar />);
+  await user.click(screen.getByRole("checkbox", { name: "200" }));
+  expect(appStore.getState().filters.magics).toEqual([100]);
+  await user.click(screen.getByRole("checkbox", { name: "200" }));
+  expect(appStore.getState().filters.magics).toBeNull(); // all on = no filter
 });

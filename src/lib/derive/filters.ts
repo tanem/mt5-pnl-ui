@@ -6,13 +6,17 @@ export interface Filterable {
   magic: number;
 }
 
-/** null means "no filter" on that dimension; from/to are UTC dates, inclusive. */
+/**
+ * null means "no filter" on that dimension; from/to are UTC dates,
+ * inclusive. For accounts and magics, [] means "match nothing" — never
+ * conflate it with null.
+ */
 export interface Filters {
   accounts: number[] | null;
   from: string | null; // "YYYY-MM-DD"
   to: string | null; // "YYYY-MM-DD"
   symbol: string | null;
-  magic: number | null;
+  magics: number[] | null;
 }
 
 export const EMPTY_FILTERS: Filters = {
@@ -20,7 +24,7 @@ export const EMPTY_FILTERS: Filters = {
   from: null,
   to: null,
   symbol: null,
-  magic: null,
+  magics: null,
 };
 
 export function applyFilters<T extends Filterable>(
@@ -31,6 +35,7 @@ export function applyFilters<T extends Filterable>(
   const toSecExcl = f.to ? Date.parse(`${f.to}T00:00:00Z`) / 1000 + 86400 : null;
   const accounts = f.accounts ? new Set(f.accounts) : null;
   const symbol = f.symbol?.toUpperCase() ?? null;
+  const magics = f.magics ? new Set(f.magics) : null;
 
   return rows.filter(
     (r) =>
@@ -38,6 +43,6 @@ export function applyFilters<T extends Filterable>(
       (fromSec === null || r.time >= fromSec) &&
       (toSecExcl === null || r.time < toSecExcl) &&
       (symbol === null || r.symbol.toUpperCase() === symbol) &&
-      (f.magic === null || r.magic === f.magic),
+      (magics === null || magics.has(r.magic)),
   );
 }

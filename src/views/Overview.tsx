@@ -125,7 +125,7 @@ export default function Overview() {
       s.filters.from !== null ||
       s.filters.to !== null ||
       s.filters.symbol !== null ||
-      s.filters.magic !== null,
+      s.filters.magics !== null,
   );
   const currencies = [
     ...new Set([...returnsGroups.keys(), ...dealGroups.keys()]),
