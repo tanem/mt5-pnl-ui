@@ -68,10 +68,6 @@ export function computeAccountReturns(
 
   const floating = account.equity - account.balance;
   const profit = withdrawals + account.balance + floating - deposits;
-  const diff = Math.abs(deposits - withdrawals + adjustments + dealsNet - account.balance);
-  // Round to tolerance precision to handle floating point errors
-  const decimalPlaces = -Math.floor(Math.log10(RECONCILE_TOLERANCE));
-  const roundedDiff = Math.round(diff * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
   return {
     login: account.login,
     label: account.label,
@@ -83,7 +79,11 @@ export function computeAccountReturns(
     floating,
     profit,
     gainPct: deposits > 0 ? profit / deposits : null,
-    reconciles: roundedDiff <= RECONCILE_TOLERANCE,
+    // The 1e-9 epsilon absorbs float representation noise without moving
+    // the real boundary.
+    reconciles:
+      Math.abs(deposits - withdrawals + adjustments + dealsNet - account.balance) <=
+      RECONCILE_TOLERANCE + 1e-9,
   };
 }
 
