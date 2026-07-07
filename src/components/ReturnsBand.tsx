@@ -2,6 +2,9 @@ import StatTile, { tone } from "./StatTile";
 import { money, num, signedMoney, signedPct } from "../lib/format";
 import type { AccountReturns, ReturnsGroup } from "../lib/derive/returns";
 
+const RECONCILE_NOTE =
+  "Cash flows + trade P&L don't reconcile with the balance — snapshot deal history may be incomplete.";
+
 interface Props {
   currency: string;
   group: ReturnsGroup;
@@ -87,12 +90,11 @@ export default function ReturnsBand({ currency, group, filtersActive }: Props) {
           </tbody>
         </table>
       )}
-      {failing.map((a) => (
-        <p key={a.login} className="mt-2 text-xs text-muted">
-          {accountName(a)}: cash flows + trade P&L don&apos;t reconcile with
-          the balance — snapshot deal history may be incomplete.
+      {failing.length > 0 && (
+        <p className="mt-2 text-xs text-muted">
+          {group.accounts.length > 1 ? `* ${RECONCILE_NOTE}` : RECONCILE_NOTE}
         </p>
-      ))}
+      )}
     </section>
   );
 }
