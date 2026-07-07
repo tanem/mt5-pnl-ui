@@ -82,7 +82,9 @@ picker, or (Chromium browsers only) a saved file handle:
 
 - **Overview** — headline statistics (net P&L, win rate, profit factor,
   max drawdown, trade count, average win/loss, costs), a cumulative net
-  P&L curve, and monthly/last-30-days bar charts.
+  P&L curve, and monthly/last-30-days bar charts. Also shows lifetime
+  account returns (deposited, withdrawn, floating, profit, percentage
+  gain) per currency group, affected by the account filter only.
 - **Calendar** — a month grid with one cell per trading day, given a flat
   colour wash by net P&L sign, plus a week-total column and a running
   month total.

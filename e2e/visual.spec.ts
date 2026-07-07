@@ -26,6 +26,10 @@ test("captures Overview, with and without a chart tooltip", async ({ page }) => 
   await load(page);
   await page.screenshot({ path: `${OUT}/overview.png`, fullPage: true });
   const chart = page.getByRole("img", { name: /cumulative net p&l \(usd\)/i });
+  // The account returns band pushes this chart below the fold at this
+  // viewport height, so scroll it into view before reading its box —
+  // otherwise the clipped screenshot below falls outside the viewport.
+  await chart.scrollIntoViewIfNeeded();
   const box = (await chart.boundingBox())!;
   await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.5);
   await page.waitForTimeout(500);

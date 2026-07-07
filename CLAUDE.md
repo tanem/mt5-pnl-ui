@@ -43,7 +43,9 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   clears everything back to the load screen.
 - `src/store/selectors.ts` — `useAccounts`, `useFilteredDeals`
   (applies the global `Filters`), `useCurrencyGroups` (splits filtered
-  deals by account currency — see the mixed-currency guard below).
+  deals by account currency — see the mixed-currency guard below),
+  `useReturnsGroups` (lifetime account returns per currency, honouring
+  only the account filter).
 - `src/views/` — `Overview.tsx`, `CalendarView.tsx`, `Trades.tsx`,
   `Strategies.tsx`, each consuming `useCurrencyGroups()` and rendering
   one section per currency.
@@ -52,7 +54,8 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
 - `src/lib/derive/` — pure functions: `filters.ts` (the global filter),
   `currency.ts` (`splitByCurrency`), `stats.ts` (net P&L, win/loss,
   profit factor, expectancy), `equity.ts` (cumulative curve, max
-  drawdown), `buckets.ts` (UTC day/month grouping).
+  drawdown), `buckets.ts` (UTC day/month grouping), `returns.ts`
+  (lifetime account returns from cash flows and balances).
 
 ## Gotchas
 
@@ -116,6 +119,12 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   Playwright project excluded from `npm run e2e`, capturing the
   Overview view from the synthetic e2e fixture). Refresh and commit it
   after visible UI changes; never replace it with a hand-taken image.
+- **Returns semantics are this repo's own** — the account returns band
+  (deposited/withdrawn/floating/profit/gain) is defined by
+  `docs/superpowers/specs/2026-07-07-account-returns-design.md`, not
+  mirrored from mt5-pnl-cli. Lifetime figures, identity-based profit
+  (`withdrawals + equity − deposits`), account filter only — date,
+  symbol, and magic filters must never affect them.
 
 ## Conventions
 

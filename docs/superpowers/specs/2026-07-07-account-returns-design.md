@@ -89,7 +89,7 @@ withdrawals, floating, and profit across the group's accounts; group
 `gainPct = Σ profit ÷ Σ deposits`. Never across currency groups.
 
 **Ratios.** `gainPct` is null when `deposits` is zero, rendered as
-"—", matching how `PnlStats` handles zero denominators. Zero deposits
+"n/a", matching how `PnlStats` handles zero denominators. Zero deposits
 usually accompanies a failed reconciliation (the exporter window
 missed the initial deposit); the note covers both.
 
@@ -160,7 +160,7 @@ from the existing filtered-deals grouping.
 
 **Edge cases**:
 
-- `deposits === 0` → `gainPct: null` → "—".
+- `deposits === 0` → `gainPct: null` → "n/a".
 - `filters.accounts === []` → no sections; reuse the existing
   empty-state message.
 - Negative floating, negative profit, gain below −100%: flow through
