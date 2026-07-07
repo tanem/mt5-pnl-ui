@@ -22,6 +22,13 @@ export function pct(v: number | null): string {
   return v === null ? "n/a" : `${(v * 100).toFixed(1)}%`;
 }
 
+/** 0.35 → "+35.0%" — signed, may exceed 100% (account gain); null → "n/a". */
+export function signedPct(v: number | null): string {
+  if (v === null) return "n/a";
+  const s = `${(v * 100).toFixed(1)}%`;
+  return v > 0 ? `+${s}` : s;
+}
+
 /** 1.3612 → "1.36"; null → "n/a". */
 export function ratio(v: number | null): string {
   return v === null ? "n/a" : v.toFixed(2);
