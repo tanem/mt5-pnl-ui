@@ -83,8 +83,10 @@ picker, or (Chromium browsers only) a saved file handle:
 - **Overview** — headline statistics (net P&L, win rate, profit factor,
   max drawdown, trade count, average win/loss, costs), a cumulative net
   P&L curve, and monthly/last-30-days bar charts. Also shows lifetime
-  account returns (deposited, withdrawn, floating, profit, percentage
-  gain) per currency group, affected by the account filter only.
+  account returns (deposited, withdrawn, transferred between in-scope
+  accounts, floating, profit, percentage gain) per currency group,
+  affected by the account filter only; deposited and withdrawn count
+  external flows only.
 - **Calendar** — a month grid with one cell per trading day, given a flat
   colour wash by net P&L sign, plus a week-total column and a running
   month total.
@@ -94,8 +96,8 @@ picker, or (Chromium browsers only) a saved file handle:
   per account or per magic number, each row with an equity sparkline.
 
 Every view respects the global filter bar (accounts, date range, symbol,
-magic) and, where accounts in scope span more than one currency, renders
-one section per currency rather than combining them (see
+magic numbers) and, where accounts in scope span more than one currency,
+renders one section per currency rather than combining them (see
 [Semantics](#semantics)).
 
 ## Semantics

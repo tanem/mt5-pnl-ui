@@ -45,7 +45,9 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   (applies the global `Filters`), `useCurrencyGroups` (splits filtered
   deals by account currency — see the mixed-currency guard below),
   `useReturnsGroups` (lifetime account returns per currency, honouring
-  only the account filter).
+  only the account filter; group totals count external flows only, with
+  internal transfers between in-scope accounts paired by amount and
+  time and reported separately).
 - `src/views/` — `Overview.tsx`, `CalendarView.tsx`, `Trades.tsx`,
   `Strategies.tsx`, each consuming `useCurrencyGroups()` and rendering
   one section per currency.
@@ -105,6 +107,8 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   nothing".** `FilterBar` relies on this: toggling every account back on
   sets `accounts: null` rather than the full list. Don't conflate an
   empty array with "no filter" when touching `applyFilters`.
+  `filters.magics` carries the same semantics for the magic
+  multi-select.
 - **React hooks lint is strict — no setState-in-effect.** See
   `LoadScreen.tsx`'s comment: it clears the passphrase by comparing
   `status` to a `prevStatus` state variable and adjusting during render
@@ -120,11 +124,14 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   Overview view from the synthetic e2e fixture). Refresh and commit it
   after visible UI changes; never replace it with a hand-taken image.
 - **Returns semantics are this repo's own** — the account returns band
-  (deposited/withdrawn/floating/profit/gain) is defined by
+  (deposited/withdrawn/transferred/floating/profit/gain) is defined by
   `docs/superpowers/specs/2026-07-07-account-returns-design.md`, not
   mirrored from mt5-pnl-cli. Lifetime figures, identity-based profit
   (`withdrawals + equity − deposits`), account filter only — date,
-  symbol, and magic filters must never affect them.
+  symbol, and magic filters must never affect them. Group
+  deposited/withdrawn are external-only; internal transfers are paired
+  by amount and time (`pairInternalTransfers`) and shown once per pair.
+  See docs/superpowers/specs/2026-07-08-dashboard-refinements-design.md.
 
 ## Conventions
 
