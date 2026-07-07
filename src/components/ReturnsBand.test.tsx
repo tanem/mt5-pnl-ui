@@ -21,6 +21,7 @@ test("renders the lifetime tiles", () => {
   expect(within(band).getByText("Profit").nextSibling).toHaveTextContent("+3,500.00 USD");
   expect(within(band).getByText("Gain").nextSibling).toHaveTextContent("+35.0%");
   expect(within(band).queryByText("Adjustments")).toBeNull(); // zero → hidden
+  expect(within(band).queryByText("Transferred")).toBeNull(); // zero → hidden
   expect(within(band).queryByRole("table")).toBeNull(); // one account → no table
   expect(within(band).queryByText(/not affected by/i)).toBeNull();
 });
@@ -87,4 +88,21 @@ test("gain renders n/a with neutral tone when nothing was deposited", () => {
   render(<ReturnsBand currency="USD" group={group} filtersActive={false} />);
   const gain = screen.getByText("Gain").nextSibling;
   expect(gain).toHaveTextContent("n/a");
+});
+
+test("shows the transferred tile only when internal transfers exist", () => {
+  const accounts = [
+    account({ login: 111, label: "Trend EA", balance: 700, equity: 700 }),
+    account({ login: 222, label: "Scalper EA", balance: 300, equity: 300 }),
+  ];
+  const flows = [
+    flow({ account: 111, ticket: 1, profit: 1000, time_msc: 0 }),
+    flow({ account: 111, ticket: 2, profit: -300, time_msc: 2_000_000 }),
+    flow({ account: 222, ticket: 3, profit: 300, time_msc: 2_030_000 }),
+  ];
+  const group = groupReturnsByCurrency(accounts, flows, [], null).get("USD")!;
+  render(<ReturnsBand currency="USD" group={group} filtersActive={false} />);
+  const band = screen.getByRole("region", { name: /usd account returns/i });
+  expect(within(band).getByText("Transferred").nextSibling).toHaveTextContent("300.00 USD");
+  expect(within(band).getAllByText("Deposited")[0].nextSibling).toHaveTextContent("1,000.00 USD");
 });

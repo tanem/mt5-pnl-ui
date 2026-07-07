@@ -36,6 +36,9 @@ export default function ReturnsBand({ currency, group, filtersActive }: Props) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatTile label="Deposited" value={money(t.deposits, currency)} />
         <StatTile label="Withdrawn" value={money(t.withdrawals, currency)} />
+        {t.transfers !== 0 && (
+          <StatTile label="Transferred" value={money(t.transfers, currency)} />
+        )}
         <StatTile
           label="Floating"
           value={signedMoney(t.floating, currency)}
