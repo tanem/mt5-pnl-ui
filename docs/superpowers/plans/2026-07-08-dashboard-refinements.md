@@ -756,6 +756,8 @@ apart so they pair:
 
 Run: `node scripts/build-e2e-fixture.mjs`
 Expected: `wrote e2e/fixtures/snapshot.json.gz.age`
+(The `.age` file is git-ignored; CI regenerates it from the script, so
+only the script is committed.)
 
 - [ ] **Step 3: Extend the returns e2e test**
 
@@ -797,7 +799,7 @@ per-account table).
 - [ ] **Step 6: Commit**
 
 ```bash
-git add scripts/build-e2e-fixture.mjs e2e/app.spec.ts e2e/fixtures/snapshot.json.gz.age docs/screenshot.png
+git add scripts/build-e2e-fixture.mjs e2e/app.spec.ts docs/screenshot.png
 git commit -m "test: cover internal transfers end-to-end and refresh artefacts"
 ```
 
