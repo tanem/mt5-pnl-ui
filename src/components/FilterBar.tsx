@@ -12,6 +12,10 @@ export default function FilterBar() {
     () => [...new Set(deals.map((d) => d.symbol))].sort(),
     [deals],
   );
+  const magics = useMemo(
+    () => [...new Set(deals.map((d) => d.magic))].sort((a, b) => a - b),
+    [deals],
+  );
   const selected = filters.accounts ?? accounts.map((a) => a.login);
 
   function toggleAccount(login: number) {
@@ -20,6 +24,16 @@ export default function FilterBar() {
       : [...selected, login];
     // all accounts on = no filter
     setFilters({ accounts: next.length === accounts.length ? null : next });
+  }
+
+  const selectedMagics = filters.magics ?? magics;
+
+  function toggleMagic(magic: number) {
+    const next = selectedMagics.includes(magic)
+      ? selectedMagics.filter((m) => m !== magic)
+      : [...selectedMagics, magic];
+    // all magics on = no filter
+    setFilters({ magics: next.length === magics.length ? null : next });
   }
 
   return (
@@ -78,18 +92,24 @@ export default function FilterBar() {
         </select>
       </label>
 
-      <label className="flex flex-col gap-1 text-xs tracking-wide text-muted uppercase">
-        Magic
-        <input
-          type="number"
-          value={filters.magic ?? ""}
-          onChange={(e) =>
-            setFilters({
-              magic: e.target.value === "" ? null : Number(e.target.value),
-            })
-          }
-        />
-      </label>
+      <fieldset className="flex flex-wrap items-center gap-3">
+        <legend className="text-xs tracking-wide text-muted uppercase">
+          Magic
+        </legend>
+        {magics.map((m) => (
+          <label
+            key={m}
+            className="flex items-center gap-1.5 text-sm text-text"
+          >
+            <input
+              type="checkbox"
+              checked={selectedMagics.includes(m)}
+              onChange={() => toggleMagic(m)}
+            />
+            {m}
+          </label>
+        ))}
+      </fieldset>
     </section>
   );
 }

@@ -246,7 +246,7 @@ function CashFlows() {
   const labels = useLabelByLogin();
   // Cash flows have empty symbol / zero magic; only account & date apply.
   const rows = useMemo(
-    () => applyFilters(flows, { ...filters, symbol: null, magic: null }),
+    () => applyFilters(flows, { ...filters, symbol: null, magics: null }),
     [flows, filters],
   );
   if (rows.length === 0) return <p className="text-muted">No cash flows.</p>;

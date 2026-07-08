@@ -35,9 +35,15 @@ const snapshot = {
   schema_version: "1.0",
   generated_at: "2026-07-01T00:00:00Z",
   accounts: [
-    // USD reconciles: 10,000 − 2,000 + 45 (Σ closed-deal nets: 51 profit − 6
-    // commission) = 8,045; equity 8,200 → floating +155, gain +2.0%.
-    { login: 1234567, label: "Trend EA", currency: "USD", balance: 8045, equity: 8200, last_success_at: "2026-07-01T00:00:00Z", last_error: null },
+    // USD, Trend EA: 10,000 − 2,000 − 500 (transfer out) + 45 (Σ closed-deal
+    // nets: 51 profit − 6 commission) = 7,545; equity 7,700 → floating +155.
+    // Per-account profit 2,500 + 7,545 + 155 − 10,000 = +200.
+    { login: 1234567, label: "Trend EA", currency: "USD", balance: 7545, equity: 7700, last_success_at: "2026-07-01T00:00:00Z", last_error: null },
+    // USD, Grid EA: seeded only by the 500 transfer in; balance 500 →
+    // reconciles, per-account profit 0. Group totals: deposited 10,000 and
+    // withdrawn 2,000 stay external-only, transferred 500, profit +200,
+    // gain +2.0%.
+    { login: 2345678, label: "Grid EA", currency: "USD", balance: 500, equity: 500, last_success_at: "2026-07-01T00:00:00Z", last_error: null },
     // EUR deliberately does not reconcile: 4,000 + 4.5 ≠ 5,000 — exercises
     // the incomplete-history note; profit 1,000, gain +25.0%.
     { login: 7654321, label: "Scalper EA", currency: "EUR", balance: 5000, equity: 5000, last_success_at: "2026-07-01T00:00:00Z", last_error: null },
@@ -48,6 +54,8 @@ const snapshot = {
     flow({ account: 1234567, ticket: 1000, profit: 10000, comment: "Deposit", time: start - 30 * DAY, time_msc: (start - 30 * DAY) * 1000 }),
     flow({ account: 1234567, ticket: 1001, profit: -2000, comment: "Withdrawal", time: start + 40 * DAY, time_msc: (start + 40 * DAY) * 1000 }),
     flow({ account: 7654321, ticket: 1002, profit: 4000, comment: "Deposit", time: start - 30 * DAY, time_msc: (start - 30 * DAY) * 1000 }),
+    flow({ account: 1234567, ticket: 1003, profit: -500, comment: "Transfer to 2345678", time: start + 20 * DAY, time_msc: (start + 20 * DAY) * 1000 }),
+    flow({ account: 2345678, ticket: 1004, profit: 500, comment: "Transfer from 1234567", time: start + 20 * DAY + 30, time_msc: (start + 20 * DAY + 30) * 1000 }),
   ],
 };
 

@@ -27,9 +27,14 @@ describe("applyFilters", () => {
     expect(out).toHaveLength(2);
   });
 
-  test("magic is exact", () => {
-    const out = applyFilters(rows, { ...EMPTY_FILTERS, magic: 200 });
+  test("magics is a multi-value allowlist: null all, [] none, list selects", () => {
+    expect(applyFilters(rows, { ...EMPTY_FILTERS, magics: null })).toHaveLength(3);
+    expect(applyFilters(rows, { ...EMPTY_FILTERS, magics: [] })).toHaveLength(0);
+    const out = applyFilters(rows, { ...EMPTY_FILTERS, magics: [200] });
     expect(out.map((r) => r.magic)).toEqual([200]);
+    expect(
+      applyFilters(rows, { ...EMPTY_FILTERS, magics: [100, 200] }),
+    ).toHaveLength(3);
   });
 
   test("date range is UTC and inclusive on both ends", () => {
@@ -45,7 +50,7 @@ describe("applyFilters", () => {
     const out = applyFilters(rows, {
       ...EMPTY_FILTERS,
       accounts: [111],
-      magic: 100,
+      magics: [100],
     });
     expect(out).toHaveLength(1);
     expect(out[0]?.time).toBe(T_JUN1);

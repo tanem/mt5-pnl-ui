@@ -7,6 +7,56 @@ export const BALANCE_DEAL_TYPE = 2;
 /** Reconciliation tolerance, in account currency (float rounding headroom). */
 const RECONCILE_TOLERANCE = 0.01;
 
+/** Legs of one internal transfer must land within this window. */
+const TRANSFER_WINDOW_MS = 120_000;
+
+/**
+ * Flows that are legs of an internal transfer between the given
+ * accounts: one negative and one positive balance-type flow of equal
+ * magnitude (within RECONCILE_TOLERANCE), on two different accounts
+ * with the same account currency, whose time_msc values sit within
+ * TRANSFER_WINDOW_MS. Each flow joins at most one pair; ambiguity is
+ * resolved nearest-in-time first, ties by ticket order. Membership is
+ * by object identity, so callers must pass the snapshot's own flow
+ * objects.
+ */
+export function pairInternalTransfers(
+  flows: CashFlow[],
+  accounts: AccountSnapshot[],
+): Set<CashFlow> {
+  const currencyOf = new Map(accounts.map((a) => [a.login, a.currency]));
+  const byTimeThenTicket = (a: CashFlow, b: CashFlow) =>
+    a.time_msc - b.time_msc || a.ticket - b.ticket;
+  const candidates = flows
+    .filter((f) => f.type === BALANCE_DEAL_TYPE && currencyOf.has(f.account))
+    .sort(byTimeThenTicket);
+  const outs = candidates.filter((f) => dealNet(f) < 0);
+  const ins = candidates.filter((f) => dealNet(f) > 0);
+
+  const paired = new Set<CashFlow>();
+  for (const out of outs) {
+    let best: CashFlow | null = null;
+    let bestGap = Infinity;
+    for (const leg of ins) {
+      if (paired.has(leg) || leg.account === out.account) continue;
+      if (currencyOf.get(leg.account) !== currencyOf.get(out.account)) continue;
+      if (Math.abs(dealNet(leg) + dealNet(out)) > RECONCILE_TOLERANCE + 1e-9)
+        continue;
+      const gap = Math.abs(leg.time_msc - out.time_msc);
+      if (gap > TRANSFER_WINDOW_MS) continue;
+      if (gap < bestGap || (gap === bestGap && best !== null && leg.ticket < best.ticket)) {
+        best = leg;
+        bestGap = gap;
+      }
+    }
+    if (best) {
+      paired.add(out);
+      paired.add(best);
+    }
+  }
+  return paired;
+}
+
 /**
  * Lifetime money-in/out figures for one account. Semantics are this repo's
  * own (the account returns spec), not mirrored from mt5-pnl-cli. Profit is
@@ -34,6 +84,8 @@ export interface AccountReturns {
 export interface ReturnsTotals {
   deposits: number;
   withdrawals: number;
+  /** Internal transfers between in-scope accounts, counted once per pair. */
+  transfers: number;
   adjustments: number;
   floating: number;
   profit: number;
@@ -90,6 +142,10 @@ export function computeAccountReturns(
 /**
  * Returns per account currency, for the accounts in scope. Aggregates only
  * within a group — never across currencies (the mixed-currency guard).
+ * Group deposits/withdrawals count external flows only; transfers between
+ * in-scope accounts are reported once per pair in `totals.transfers`.
+ * Per-account figures keep every leg (a transfer out is that account's
+ * withdrawal).
  */
 export function groupReturnsByCurrency(
   accounts: AccountSnapshot[],
@@ -101,6 +157,7 @@ export function groupReturnsByCurrency(
     accountFilter === null
       ? accounts
       : accounts.filter((a) => accountFilter.includes(a.login));
+  const paired = pairInternalTransfers(flows, scope);
 
   const out = new Map<string, ReturnsGroup>();
   for (const a of scope) {
@@ -112,6 +169,7 @@ export function groupReturnsByCurrency(
         totals: {
           deposits: 0,
           withdrawals: 0,
+          transfers: 0,
           adjustments: 0,
           floating: 0,
           profit: 0,
@@ -121,8 +179,15 @@ export function groupReturnsByCurrency(
       out.set(a.currency, group);
     }
     group.accounts.push(r);
-    group.totals.deposits += r.deposits;
-    group.totals.withdrawals += r.withdrawals;
+    for (const f of flows) {
+      if (f.account !== a.login || f.type !== BALANCE_DEAL_TYPE) continue;
+      const net = dealNet(f);
+      if (paired.has(f)) {
+        // count each pair once, via its receiving leg
+        if (net > 0) group.totals.transfers += net;
+      } else if (net > 0) group.totals.deposits += net;
+      else group.totals.withdrawals += -net;
+    }
     group.totals.adjustments += r.adjustments;
     group.totals.floating += r.floating;
     group.totals.profit += r.profit;

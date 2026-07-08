@@ -21,6 +21,7 @@ test("renders the lifetime tiles", () => {
   expect(within(band).getByText("Profit").nextSibling).toHaveTextContent("+3,500.00 USD");
   expect(within(band).getByText("Gain").nextSibling).toHaveTextContent("+35.0%");
   expect(within(band).queryByText("Adjustments")).toBeNull(); // zero → hidden
+  expect(within(band).queryByText("Transferred")).toBeNull(); // zero → hidden
   expect(within(band).queryByRole("table")).toBeNull(); // one account → no table
   expect(within(band).queryByText(/not affected by/i)).toBeNull();
 });
@@ -44,21 +45,41 @@ test("notes when filters are active", () => {
   ).toBeInTheDocument();
 });
 
-test("multi-account groups get a per-account table and reconciliation note", () => {
+test("multi-account groups get one shared reconciliation footnote", () => {
   const good = account({ login: 111, label: "Trend EA", balance: 1000, equity: 1000 });
-  const bad = account({ login: 222, label: "Scalper EA", balance: 900, equity: 900 });
+  // 500 and 400 deposited but balances 900 → neither reconciles
+  const bad1 = account({ login: 222, label: "Scalper EA", balance: 900, equity: 900 });
+  const bad2 = account({ login: 333, label: "Grid EA", balance: 900, equity: 900 });
   const flows = [
     flow({ account: 111, profit: 1000 }),
-    // 500 deposited but balance 900 and no deals → does not reconcile
     flow({ account: 222, profit: 500 }),
+    flow({ account: 333, profit: 400 }),
   ];
-  const group = groupReturnsByCurrency([good, bad], flows, [], null).get("USD")!;
+  const group = groupReturnsByCurrency([good, bad1, bad2], flows, [], null).get("USD")!;
   render(<ReturnsBand currency="USD" group={group} filtersActive={false} />);
   const table = screen.getByRole("table");
-  expect(within(table).getByText("Trend EA")).toBeInTheDocument();
   expect(within(table).getByRole("row", { name: /scalper ea/i })).toHaveTextContent("*");
+  expect(within(table).getByRole("row", { name: /grid ea/i })).toHaveTextContent("*");
+  expect(within(table).getByRole("row", { name: /trend ea/i })).not.toHaveTextContent("*");
+  // one footnote for the whole group, not one per failing account
+  expect(screen.getAllByText(/don't reconcile/)).toHaveLength(1);
   expect(
-    screen.getByText(/Scalper EA: cash flows \+ trade P&L don't reconcile/),
+    screen.getByText(
+      "* Cash flows + trade P&L don't reconcile with the balance — snapshot deal history may be incomplete.",
+    ),
+  ).toBeInTheDocument();
+});
+
+test("a failing single-account group gets the footnote without the asterisk", () => {
+  // 500 deposited but balance 900 and no deals → does not reconcile
+  const acct = account({ login: 222, label: "Scalper EA", balance: 900, equity: 900 });
+  const group = groupReturnsByCurrency([acct], [flow({ account: 222, profit: 500 })], [], null).get("USD")!;
+  render(<ReturnsBand currency="USD" group={group} filtersActive={false} />);
+  expect(screen.queryByRole("table")).toBeNull();
+  expect(
+    screen.getByText(
+      "Cash flows + trade P&L don't reconcile with the balance — snapshot deal history may be incomplete.",
+    ),
   ).toBeInTheDocument();
 });
 
@@ -67,4 +88,21 @@ test("gain renders n/a with neutral tone when nothing was deposited", () => {
   render(<ReturnsBand currency="USD" group={group} filtersActive={false} />);
   const gain = screen.getByText("Gain").nextSibling;
   expect(gain).toHaveTextContent("n/a");
+});
+
+test("shows the transferred tile only when internal transfers exist", () => {
+  const accounts = [
+    account({ login: 111, label: "Trend EA", balance: 700, equity: 700 }),
+    account({ login: 222, label: "Scalper EA", balance: 300, equity: 300 }),
+  ];
+  const flows = [
+    flow({ account: 111, ticket: 1, profit: 1000, time_msc: 0 }),
+    flow({ account: 111, ticket: 2, profit: -300, time_msc: 2_000_000 }),
+    flow({ account: 222, ticket: 3, profit: 300, time_msc: 2_030_000 }),
+  ];
+  const group = groupReturnsByCurrency(accounts, flows, [], null).get("USD")!;
+  render(<ReturnsBand currency="USD" group={group} filtersActive={false} />);
+  const band = screen.getByRole("region", { name: /usd account returns/i });
+  expect(within(band).getByText("Transferred").nextSibling).toHaveTextContent("300.00 USD");
+  expect(within(band).getAllByText("Deposited")[0]!.nextSibling).toHaveTextContent("1,000.00 USD");
 });
