@@ -2,7 +2,7 @@ import { useStore } from "zustand";
 import { createStore, type StoreApi } from "zustand/vanilla";
 import { SnapshotError, type Stage } from "../lib/snapshot/errors";
 import type { Snapshot } from "../lib/snapshot/types";
-import { EMPTY_FILTERS, type Filters } from "../lib/derive/filters";
+import { EMPTY_FILTERS, reconcileFilters, type Filters } from "../lib/derive/filters";
 import { workerRunner, type PipelineRunner } from "../worker/client";
 
 export type LoadStatus = "idle" | "working" | "ready" | "error";
@@ -46,7 +46,15 @@ export function createAppStore(run: PipelineRunner): StoreApi<AppState> {
     },
 
     setFilters(patch) {
-      set((s) => ({ filters: { ...s.filters, ...patch } }));
+      set((s) => {
+        // An account change reconciles the symbol/magic selections with
+        // the new scope — see reconcileFilters.
+        const next =
+          patch.accounts !== undefined && s.snapshot
+            ? { ...patch, ...reconcileFilters(s.snapshot.closed_deals, s.filters, patch.accounts) }
+            : patch;
+        return { filters: { ...s.filters, ...next } };
+      });
     },
 
     reset() {
