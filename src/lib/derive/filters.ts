@@ -46,3 +46,53 @@ export function applyFilters<T extends Filterable>(
       (magics === null || magics.has(r.magic)),
   );
 }
+
+/** Distinct magics on deals of the selected accounts (null = all), sorted. */
+export function scopedMagics(
+  deals: readonly Filterable[],
+  accounts: readonly number[] | null,
+): number[] {
+  const scope = accounts === null ? null : new Set(accounts);
+  const out = new Set<number>();
+  for (const d of deals) if (scope === null || scope.has(d.account)) out.add(d.magic);
+  return [...out].sort((a, b) => a - b);
+}
+
+/** Distinct symbols on deals of the selected accounts (null = all), sorted. */
+export function scopedSymbols(
+  deals: readonly Filterable[],
+  accounts: readonly number[] | null,
+): string[] {
+  const scope = accounts === null ? null : new Set(accounts);
+  const out = new Set<string>();
+  for (const d of deals) if (scope === null || scope.has(d.account)) out.add(d.symbol);
+  return [...out].sort();
+}
+
+/**
+ * Reconcile the symbol and magic selections with a new account scope:
+ * still-available selections survive, vanished ones are dropped, magics
+ * entering scope arrive selected, and a selection covering everything —
+ * or nothing — collapses back to null ("all"). See the 2026-07-09
+ * dashboard-polish spec.
+ */
+export function reconcileFilters(
+  deals: readonly Filterable[],
+  filters: Filters,
+  nextAccounts: number[] | null,
+): Pick<Filters, "accounts" | "symbol" | "magics"> {
+  let magics = filters.magics;
+  if (magics !== null) {
+    const available = scopedMagics(deals, nextAccounts);
+    const previous = new Set(scopedMagics(deals, filters.accounts));
+    const selected = new Set(magics);
+    const next = available.filter((m) => selected.has(m) || !previous.has(m));
+    magics = next.length === 0 || next.length === available.length ? null : next;
+  }
+  const symbol =
+    filters.symbol !== null &&
+    !scopedSymbols(deals, nextAccounts).includes(filters.symbol)
+      ? null
+      : filters.symbol;
+  return { accounts: nextAccounts, symbol, magics };
+}

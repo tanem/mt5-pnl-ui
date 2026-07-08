@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { applyFilters, EMPTY_FILTERS } from "./filters";
+import {
+  applyFilters,
+  EMPTY_FILTERS,
+  reconcileFilters,
+  scopedMagics,
+  scopedSymbols,
+} from "./filters";
 import { deal } from "../../../tests/helpers/fixture";
 
 const T_JUN1 = Date.UTC(2025, 5, 1, 12) / 1000; // 2025-06-01T12:00Z
@@ -54,5 +60,66 @@ describe("applyFilters", () => {
     });
     expect(out).toHaveLength(1);
     expect(out[0]?.time).toBe(T_JUN1);
+  });
+});
+
+// Account 111 trades magics 100/200; account 222 trades 200/300. Magic
+// 200 is shared; 100 and 300 each exist in one account only.
+const scopeRows = [
+  deal({ account: 111, symbol: "EURUSD", magic: 100 }),
+  deal({ account: 111, symbol: "XAUUSD", magic: 200 }),
+  deal({ account: 222, symbol: "EURUSD", magic: 200 }),
+  deal({ account: 222, symbol: "USDJPY", magic: 300 }),
+];
+
+describe("scoped option lists", () => {
+  test("scopedMagics lists distinct magics of the selected accounts, sorted", () => {
+    expect(scopedMagics(scopeRows, null)).toEqual([100, 200, 300]);
+    expect(scopedMagics(scopeRows, [111])).toEqual([100, 200]);
+    expect(scopedMagics(scopeRows, [222])).toEqual([200, 300]);
+    expect(scopedMagics(scopeRows, [])).toEqual([]);
+  });
+
+  test("scopedSymbols lists distinct symbols of the selected accounts, sorted", () => {
+    expect(scopedSymbols(scopeRows, null)).toEqual(["EURUSD", "USDJPY", "XAUUSD"]);
+    expect(scopedSymbols(scopeRows, [222])).toEqual(["EURUSD", "USDJPY"]);
+  });
+});
+
+describe("reconcileFilters", () => {
+  test("null magics stays null", () => {
+    const out = reconcileFilters(scopeRows, EMPTY_FILTERS, [111]);
+    expect(out).toEqual({ accounts: [111], symbol: null, magics: null });
+  });
+
+  test("still-available selections survive, vanished ones are dropped", () => {
+    const filters = { ...EMPTY_FILTERS, magics: [100, 200] };
+    const out = reconcileFilters(scopeRows, filters, [222]);
+    // 100 vanished; 200 survives; 300 was already available and unticked
+    expect(out.magics).toEqual([200]);
+  });
+
+  test("magics entering scope arrive selected", () => {
+    const filters = { ...EMPTY_FILTERS, accounts: [111], magics: [100] };
+    const out = reconcileFilters(scopeRows, filters, [111, 222]);
+    // 300 is new to the scope → selected; 200 was available and unticked → stays out
+    expect(out.magics).toEqual([100, 300]);
+  });
+
+  test("a selection covering every available magic collapses to null", () => {
+    const filters = { ...EMPTY_FILTERS, magics: [100, 200] };
+    expect(reconcileFilters(scopeRows, filters, [111]).magics).toBeNull();
+  });
+
+  test("a selection pruned to nothing collapses to null", () => {
+    const filters = { ...EMPTY_FILTERS, magics: [100] };
+    expect(reconcileFilters(scopeRows, filters, [222]).magics).toBeNull();
+  });
+
+  test("symbol resets when it leaves scope, survives when it doesn't", () => {
+    const gone = { ...EMPTY_FILTERS, symbol: "XAUUSD" };
+    expect(reconcileFilters(scopeRows, gone, [222]).symbol).toBeNull();
+    const kept = { ...EMPTY_FILTERS, symbol: "EURUSD" };
+    expect(reconcileFilters(scopeRows, kept, [222]).symbol).toBe("EURUSD");
   });
 });
