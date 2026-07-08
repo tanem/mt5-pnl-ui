@@ -88,3 +88,19 @@ test("renders lifetime account returns that survive filtering", async ({ page })
     page.getByText("Not affected by date, symbol, or magic filters.").first(),
   ).toBeVisible();
 });
+
+test("magic options are scoped to the selected accounts", async ({ page }) => {
+  await page.goto("");
+  await dropFixture(page);
+  await page.getByLabel(/passphrase/i).fill("e2e-passphrase");
+  await page.getByRole("button", { name: /unlock/i }).click();
+
+  const filters = page.getByRole("region", { name: "Filters" });
+  await expect(filters.getByRole("checkbox", { name: "200" })).toBeVisible();
+  // magic 200 exists only in Trend EA's deals
+  await filters.getByRole("checkbox", { name: "Trend EA" }).uncheck();
+  await expect(filters.getByRole("checkbox", { name: "200" })).toHaveCount(0);
+  // back in scope → back on the list, ticked (the filter collapsed to "all")
+  await filters.getByRole("checkbox", { name: "Trend EA" }).check();
+  await expect(filters.getByRole("checkbox", { name: "200" })).toBeChecked();
+});
