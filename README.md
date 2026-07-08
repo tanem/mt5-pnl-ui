@@ -96,9 +96,10 @@ picker, or (Chromium browsers only) a saved file handle:
   per account or per magic number, each row with an equity sparkline.
 
 Every view respects the global filter bar (accounts, date range, symbol,
-magic numbers) and, where accounts in scope span more than one currency,
-renders one section per currency rather than combining them (see
-[Semantics](#semantics)).
+magic numbers; the symbol and magic option lists only offer values
+present in the selected accounts' deals) and, where accounts in scope
+span more than one currency, renders one section per currency rather
+than combining them (see [Semantics](#semantics)).
 
 ## Semantics
 
