@@ -45,7 +45,7 @@ test("notes when filters are active", () => {
   ).toBeInTheDocument();
 });
 
-test("multi-account groups get one shared reconciliation footnote", () => {
+test("multi-account groups render no table and one plain footnote", () => {
   const good = account({ login: 111, label: "Trend EA", balance: 1000, equity: 1000 });
   // 500 and 400 deposited but balances 900 → neither reconciles
   const bad1 = account({ login: 222, label: "Scalper EA", balance: 900, equity: 900 });
@@ -57,20 +57,17 @@ test("multi-account groups get one shared reconciliation footnote", () => {
   ];
   const group = groupReturnsByCurrency([good, bad1, bad2], flows, [], null).get("USD")!;
   render(<ReturnsBand currency="USD" group={group} filtersActive={false} />);
-  const table = screen.getByRole("table");
-  expect(within(table).getByRole("row", { name: /scalper ea/i })).toHaveTextContent("*");
-  expect(within(table).getByRole("row", { name: /grid ea/i })).toHaveTextContent("*");
-  expect(within(table).getByRole("row", { name: /trend ea/i })).not.toHaveTextContent("*");
-  // one footnote for the whole group, not one per failing account
+  expect(screen.queryByRole("table")).toBeNull();
+  // one plain footnote for the whole group, no asterisk convention
   expect(screen.getAllByText(/don't reconcile/)).toHaveLength(1);
   expect(
     screen.getByText(
-      "* Cash flows + trade P&L don't reconcile with the balance — snapshot deal history may be incomplete.",
+      "Cash flows + trade P&L don't reconcile with the balance — snapshot deal history may be incomplete.",
     ),
   ).toBeInTheDocument();
 });
 
-test("a failing single-account group gets the footnote without the asterisk", () => {
+test("a failing single-account group gets the footnote", () => {
   // 500 deposited but balance 900 and no deals → does not reconcile
   const acct = account({ login: 222, label: "Scalper EA", balance: 900, equity: 900 });
   const group = groupReturnsByCurrency([acct], [flow({ account: 222, profit: 500 })], [], null).get("USD")!;

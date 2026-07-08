@@ -69,12 +69,10 @@ test("renders lifetime account returns that survive filtering", async ({ page })
   await expect(usd.getByText("2,000.00 USD")).toBeVisible();
   await expect(usd.getByText("+155.00 USD")).toBeVisible();
   await expect(usd.getByText("+200.00 USD")).toBeVisible();
-  // scoped to the stat tile: the per-account table below also has a Gain
-  // column, and Trend EA's per-account gain happens to match too.
-  await expect(usd.locator(".stat-value", { hasText: "+2.0%" })).toBeVisible();
+  await expect(usd.locator(".stat-value", { hasText: "+2.0%" })).toBeVisible(); // Gain tile
   await expect(usd.getByText("500.00 USD")).toBeVisible(); // Transferred tile
-  // two USD accounts → per-account table, transfer legs kept per account
-  await expect(usd.getByRole("row", { name: /grid ea/i })).toBeVisible();
+  // the per-account table was removed (2026-07-09 spec) — totals only
+  await expect(usd.getByRole("table")).toHaveCount(0);
 
   // EUR: deposited 4,000 against balance 5,000 with only 4.50 of deal nets
   // → the deliberate reconciliation failure; profit 1,000, gain +25.0%.
