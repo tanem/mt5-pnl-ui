@@ -1,9 +1,11 @@
 import type { Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
-const fixture = readFileSync("e2e/fixtures/snapshot.json.gz.age");
-
-export async function dropFixture(page: Page): Promise<void> {
+export async function dropFixture(
+  page: Page,
+  file = "snapshot.json.gz.age",
+): Promise<void> {
+  const fixture = readFileSync(`e2e/fixtures/${file}`);
   const dataTransfer = await page.evaluateHandle((bytes) => {
     const dt = new DataTransfer();
     dt.items.add(
