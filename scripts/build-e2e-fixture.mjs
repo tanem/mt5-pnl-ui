@@ -59,9 +59,103 @@ const snapshot = {
   ],
 };
 
-const enc = new Encrypter();
-enc.setPassphrase("e2e-passphrase");
-const bytes = await enc.encrypt(new Uint8Array(gzipSync(JSON.stringify(snapshot))));
+// ---------------------------------------------------------------------------
+// Screenshot fixture: deterministic synthetic data that renders like a real
+// trading history, for the README screenshot and visual review
+// (npm run screenshot / npm run visual). Never used by e2e assertions, so
+// the exact figures are free to change — it only has to look plausible.
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const rand = mulberry32(20260709);
+const pick = (xs) => xs[Math.floor(rand() * xs.length)];
+const round2 = (n) => Math.round(n * 100) / 100;
+const dealNet = (d) => d.profit + d.commission + d.swap + d.fee;
+
+const SS_SYMBOLS = ["EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "US500"];
+const SS_START = Date.UTC(2025, 3, 6, 8) / 1000; // 2025-04-06 — ~15 months
+const SS_END = Date.UTC(2026, 5, 30, 19) / 1000; // 2026-06-30
+
+/** Deals spread evenly over the window with jitter; ~winRate winners. */
+function makeDeals({ account, magics, count, winRate, avgWin, avgLoss, firstTicket }) {
+  const deals = [];
+  for (let i = 0; i < count; i++) {
+    const time = Math.round(
+      SS_START + ((SS_END - SS_START) * i) / (count - 1) + (rand() - 0.5) * 36000,
+    );
+    const win = rand() < winRate;
+    const scale = 0.3 + 1.4 * rand();
+    deals.push(
+      deal({
+        account,
+        ticket: firstTicket + i,
+        order: firstTicket + i,
+        position_id: firstTicket + i,
+        time,
+        time_msc: time * 1000,
+        profit: round2(win ? avgWin * scale : -avgLoss * scale),
+        commission: -0.7,
+        swap: rand() < 0.25 ? round2(-1.5 * rand()) : 0,
+        volume: round2(0.1 + 0.9 * rand()),
+        symbol: pick(SS_SYMBOLS),
+        magic: pick(magics),
+      }),
+    );
+  }
+  return deals;
+}
+
+const trendDeals = makeDeals({
+  account: 5001001, magics: [30125, 30126, 30127],
+  count: 300, winRate: 0.56, avgWin: 85, avgLoss: 60, firstTicket: 10000,
+});
+const swingDeals = makeDeals({
+  account: 5001002, magics: [41200],
+  count: 140, winRate: 0.52, avgWin: 140, avgLoss: 95, firstTicket: 50000,
+});
+
+const ssFlows = [
+  flow({ account: 5001001, ticket: 9000, profit: 5000, comment: "Deposit", time: SS_START - 10 * DAY, time_msc: (SS_START - 10 * DAY) * 1000 }),
+  flow({ account: 5001001, ticket: 9001, profit: -1500, comment: "Withdrawal", time: Date.UTC(2026, 0, 15) / 1000, time_msc: Date.UTC(2026, 0, 15) }),
+  flow({ account: 5001002, ticket: 9002, profit: 4000, comment: "Deposit", time: SS_START - 5 * DAY, time_msc: (SS_START - 5 * DAY) * 1000 }),
+  flow({ account: 5001002, ticket: 9003, profit: 1000, comment: "Deposit", time: Date.UTC(2025, 10, 3) / 1000, time_msc: Date.UTC(2025, 10, 3) }),
+];
+
+/** Balance = flows + deal nets, so both accounts reconcile exactly. */
+function balanceOf(login) {
+  const rows = [...ssFlows, ...trendDeals, ...swingDeals].filter((r) => r.account === login);
+  return round2(rows.reduce((s, r) => s + dealNet(r), 0));
+}
+
+const screenshotSnapshot = {
+  schema_version: "1.0",
+  generated_at: "2026-07-01T00:00:00Z",
+  accounts: [
+    { login: 5001001, label: "Trend EA", currency: "USD", balance: balanceOf(5001001), equity: balanceOf(5001001), last_success_at: "2026-07-01T00:00:00Z", last_error: null },
+    { login: 5001002, label: "Swing EA", currency: "USD", balance: balanceOf(5001002), equity: balanceOf(5001002), last_success_at: "2026-07-01T00:00:00Z", last_error: null },
+  ],
+  closed_deals: [...trendDeals, ...swingDeals],
+  open_positions: [],
+  cash_flows: ssFlows,
+};
+
+async function writeFixture(file, snap) {
+  const enc = new Encrypter();
+  enc.setPassphrase("e2e-passphrase");
+  const bytes = await enc.encrypt(new Uint8Array(gzipSync(JSON.stringify(snap))));
+  writeFileSync(`e2e/fixtures/${file}`, bytes);
+  console.log(`wrote e2e/fixtures/${file}`);
+}
+
 mkdirSync("e2e/fixtures", { recursive: true });
-writeFileSync("e2e/fixtures/snapshot.json.gz.age", bytes);
-console.log("wrote e2e/fixtures/snapshot.json.gz.age");
+await writeFixture("snapshot.json.gz.age", snapshot);
+await writeFixture("screenshot.json.gz.age", screenshotSnapshot);

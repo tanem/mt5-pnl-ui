@@ -13,7 +13,7 @@ test.use({ viewport: { width: 1440, height: 900 } });
 
 async function load(page: Page): Promise<void> {
   await page.goto("");
-  await dropFixture(page);
+  await dropFixture(page, "screenshot.json.gz.age");
   await page.getByLabel(/passphrase/i).fill("e2e-passphrase");
   await page.getByRole("button", { name: /unlock/i }).click();
   await expect(

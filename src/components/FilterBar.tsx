@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useApp } from "../store/app";
 import { useAccounts } from "../store/selectors";
+import { scopedMagics, scopedSymbols } from "../lib/derive/filters";
 
 export default function FilterBar() {
   const accounts = useAccounts();
@@ -9,12 +10,12 @@ export default function FilterBar() {
   const setFilters = useApp((s) => s.setFilters);
 
   const symbols = useMemo(
-    () => [...new Set(deals.map((d) => d.symbol))].sort(),
-    [deals],
+    () => scopedSymbols(deals, filters.accounts),
+    [deals, filters.accounts],
   );
   const magics = useMemo(
-    () => [...new Set(deals.map((d) => d.magic))].sort((a, b) => a - b),
-    [deals],
+    () => scopedMagics(deals, filters.accounts),
+    [deals, filters.accounts],
   );
   const selected = filters.accounts ?? accounts.map((a) => a.login);
 

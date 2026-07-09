@@ -64,3 +64,33 @@ test("magic checkboxes narrow to the remaining magics, all on = no filter", asyn
   await user.click(screen.getByRole("checkbox", { name: "200" }));
   expect(appStore.getState().filters.magics).toBeNull(); // all on = no filter
 });
+
+test("magic and symbol options are scoped to the selected accounts", async () => {
+  const user = userEvent.setup();
+  render(<FilterBar />);
+  expect(screen.getByRole("checkbox", { name: "200" })).toBeInTheDocument();
+  expect(screen.getByRole("option", { name: "XAUUSD" })).toBeInTheDocument();
+  await user.click(screen.getByRole("checkbox", { name: /scalper ea/i }));
+  expect(screen.queryByRole("checkbox", { name: "200" })).toBeNull();
+  expect(screen.queryByRole("option", { name: "XAUUSD" })).toBeNull();
+});
+
+test("a selected symbol resets when its account leaves scope", async () => {
+  const user = userEvent.setup();
+  render(<FilterBar />);
+  await user.selectOptions(screen.getByLabelText(/symbol/i), "XAUUSD");
+  await user.click(screen.getByRole("checkbox", { name: /scalper ea/i }));
+  expect(appStore.getState().filters.symbol).toBeNull();
+});
+
+test("unticking a magic, removing and restoring its account leaves it ticked", async () => {
+  const user = userEvent.setup();
+  render(<FilterBar />);
+  await user.click(screen.getByRole("checkbox", { name: "200" })); // → magics [100]
+  await user.click(screen.getByRole("checkbox", { name: /scalper ea/i }));
+  // 200 left scope; the remaining selection covers everything available → null
+  expect(appStore.getState().filters.magics).toBeNull();
+  await user.click(screen.getByRole("checkbox", { name: /scalper ea/i }));
+  expect(appStore.getState().filters.magics).toBeNull();
+  expect(screen.getByRole("checkbox", { name: "200" })).toBeChecked();
+});

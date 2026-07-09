@@ -69,12 +69,10 @@ test("renders lifetime account returns that survive filtering", async ({ page })
   await expect(usd.getByText("2,000.00 USD")).toBeVisible();
   await expect(usd.getByText("+155.00 USD")).toBeVisible();
   await expect(usd.getByText("+200.00 USD")).toBeVisible();
-  // scoped to the stat tile: the per-account table below also has a Gain
-  // column, and Trend EA's per-account gain happens to match too.
-  await expect(usd.locator(".stat-value", { hasText: "+2.0%" })).toBeVisible();
+  await expect(usd.locator(".stat-value", { hasText: "+2.0%" })).toBeVisible(); // Gain tile
   await expect(usd.getByText("500.00 USD")).toBeVisible(); // Transferred tile
-  // two USD accounts → per-account table, transfer legs kept per account
-  await expect(usd.getByRole("row", { name: /grid ea/i })).toBeVisible();
+  // the per-account table was removed (2026-07-09 spec) — totals only
+  await expect(usd.getByRole("table")).toHaveCount(0);
 
   // EUR: deposited 4,000 against balance 5,000 with only 4.50 of deal nets
   // → the deliberate reconciliation failure; profit 1,000, gain +25.0%.
@@ -89,4 +87,20 @@ test("renders lifetime account returns that survive filtering", async ({ page })
   await expect(
     page.getByText("Not affected by date, symbol, or magic filters.").first(),
   ).toBeVisible();
+});
+
+test("magic options are scoped to the selected accounts", async ({ page }) => {
+  await page.goto("");
+  await dropFixture(page);
+  await page.getByLabel(/passphrase/i).fill("e2e-passphrase");
+  await page.getByRole("button", { name: /unlock/i }).click();
+
+  const filters = page.getByRole("region", { name: "Filters" });
+  await expect(filters.getByRole("checkbox", { name: "200" })).toBeVisible();
+  // magic 200 exists only in Trend EA's deals
+  await filters.getByRole("checkbox", { name: "Trend EA" }).uncheck();
+  await expect(filters.getByRole("checkbox", { name: "200" })).toHaveCount(0);
+  // back in scope → back on the list, ticked (the filter collapsed to "all")
+  await filters.getByRole("checkbox", { name: "Trend EA" }).check();
+  await expect(filters.getByRole("checkbox", { name: "200" })).toBeChecked();
 });

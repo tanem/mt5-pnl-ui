@@ -15,8 +15,8 @@ npm ci               # install
 npm run dev          # dev server (Vite; no CSP — see Gotchas)
 npm test             # unit tests (Vitest + Testing Library, jsdom)
 npm run e2e          # Playwright end-to-end tests (real worker, real build)
-npm run screenshot   # regenerate docs/screenshot.png (Overview, e2e fixture)
-npm run visual       # capture per-view screenshots to visual-review/ (inspection aid, not a test)
+npm run screenshot   # regenerate docs/screenshot.png (Overview, screenshot fixture)
+npm run visual       # capture per-view screenshots to visual-review/ (screenshot fixture; inspection aid, not a test)
 npm run build        # tsc --noEmit && vite build (injects the CSP)
 npm run typecheck    # tsc --noEmit only
 npm run lint         # eslint src e2e
@@ -108,7 +108,11 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   sets `accounts: null` rather than the full list. Don't conflate an
   empty array with "no filter" when touching `applyFilters`.
   `filters.magics` carries the same semantics for the magic
-  multi-select.
+  multi-select. Symbol and magic *options* are scoped to the selected
+  accounts (`scopedMagics`/`scopedSymbols`), and an account change
+  reconciles the selections in the store via `reconcileFilters` —
+  prune vanished choices, auto-select magics entering scope, collapse
+  to `null` on all-or-nothing.
 - **React hooks lint is strict — no setState-in-effect.** See
   `LoadScreen.tsx`'s comment: it clears the passphrase by comparing
   `status` to a `prevStatus` state variable and adjusting during render
@@ -121,8 +125,10 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   `src/lib/snapshot/version.ts`. Update all three in the same change.
 - **`docs/screenshot.png` is generated**, by `npm run screenshot` (a
   Playwright project excluded from `npm run e2e`, capturing the
-  Overview view from the synthetic e2e fixture). Refresh and commit it
-  after visible UI changes; never replace it with a hand-taken image.
+  Overview view from the dedicated screenshot fixture
+  (`e2e/fixtures/screenshot.json.gz.age`; both fixtures are written by
+  `scripts/build-e2e-fixture.mjs`)). Refresh and commit it after
+  visible UI changes; never replace it with a hand-taken image.
 - **Returns semantics are this repo's own** — the account returns band
   (deposited/withdrawn/transferred/floating/profit/gain) is defined by
   `docs/superpowers/specs/2026-07-07-account-returns-design.md`, not
@@ -132,6 +138,9 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   deposited/withdrawn are external-only; internal transfers are paired
   by amount and time (`pairInternalTransfers`) and shown once per pair.
   See docs/superpowers/specs/2026-07-08-dashboard-refinements-design.md.
+  The per-account returns table was removed; the band shows group
+  totals only (see
+  docs/superpowers/specs/2026-07-09-dashboard-polish-design.md).
 
 ## Conventions
 

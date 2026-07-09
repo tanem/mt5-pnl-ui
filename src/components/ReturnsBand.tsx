@@ -1,6 +1,6 @@
 import StatTile, { tone } from "./StatTile";
-import { money, num, signedMoney, signedPct } from "../lib/format";
-import type { AccountReturns, ReturnsGroup } from "../lib/derive/returns";
+import { money, signedMoney, signedPct } from "../lib/format";
+import type { ReturnsGroup } from "../lib/derive/returns";
 
 const RECONCILE_NOTE =
   "Cash flows + trade P&L don't reconcile with the balance — snapshot deal history may be incomplete.";
@@ -12,17 +12,13 @@ interface Props {
   filtersActive: boolean;
 }
 
-function accountName(a: AccountReturns): string {
-  return a.label || String(a.login);
-}
-
 /**
  * Lifetime money-in/out for one currency group. Deliberately unaffected by
  * the date, symbol, and magic filters — see the account returns spec.
  */
 export default function ReturnsBand({ currency, group, filtersActive }: Props) {
   const t = group.totals;
-  const failing = group.accounts.filter((a) => !a.reconciles);
+  const reconciles = group.accounts.every((a) => a.reconciles);
   return (
     <section aria-label={`${currency} account returns`} className="mb-4">
       <h3 className="mb-2 font-mono text-xs font-semibold tracking-widest text-muted uppercase">
@@ -62,42 +58,7 @@ export default function ReturnsBand({ currency, group, filtersActive }: Props) {
           />
         )}
       </div>
-      {group.accounts.length > 1 && (
-        <table className="mt-3 w-full border-collapse text-sm">
-          <thead>
-            <tr className="text-left text-xs tracking-wide text-muted uppercase">
-              <th className="py-1 pr-3 font-normal">Account</th>
-              <th className="py-1 pr-3 text-right font-normal">Deposited</th>
-              <th className="py-1 pr-3 text-right font-normal">Withdrawn</th>
-              <th className="py-1 pr-3 text-right font-normal">Balance</th>
-              <th className="py-1 pr-3 text-right font-normal">Floating</th>
-              <th className="py-1 pr-3 text-right font-normal">Profit</th>
-              <th className="py-1 text-right font-normal">Gain</th>
-            </tr>
-          </thead>
-          <tbody className="font-mono tabular-nums">
-            {group.accounts.map((a) => (
-              <tr key={a.login} className="border-t border-border">
-                <td className="py-1.5 pr-3 font-sans">
-                  {accountName(a)}
-                  {!a.reconciles && " *"}
-                </td>
-                <td className="py-1.5 pr-3 text-right">{num(a.deposits)}</td>
-                <td className="py-1.5 pr-3 text-right">{num(a.withdrawals)}</td>
-                <td className="py-1.5 pr-3 text-right">{num(a.balance)}</td>
-                <td className="py-1.5 pr-3 text-right">{num(a.floating)}</td>
-                <td className="py-1.5 pr-3 text-right">{num(a.profit)}</td>
-                <td className="py-1.5 text-right">{signedPct(a.gainPct)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {failing.length > 0 && (
-        <p className="mt-2 text-xs text-muted">
-          {group.accounts.length > 1 ? `* ${RECONCILE_NOTE}` : RECONCILE_NOTE}
-        </p>
-      )}
+      {!reconciles && <p className="mt-2 text-xs text-muted">{RECONCILE_NOTE}</p>}
     </section>
   );
 }

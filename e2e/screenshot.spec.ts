@@ -8,7 +8,7 @@ test.use({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 });
 
 test("captures the Overview view for the README", async ({ page }) => {
   await page.goto("");
-  await dropFixture(page);
+  await dropFixture(page, "screenshot.json.gz.age");
   await page.getByLabel(/passphrase/i).fill("e2e-passphrase");
   await page.getByRole("button", { name: /unlock/i }).click();
 
