@@ -12,7 +12,7 @@ npm ci
 ## Running tests and checks
 
 ```bash
-npm run dev          # local dev server (Vite, no CSP — see CLAUDE.md)
+npm run dev          # local dev server (Vite, no CSP — see AGENTS.md)
 npm test             # unit tests (Vitest)
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
@@ -22,7 +22,7 @@ npm run visual       # capture per-view screenshots to visual-review/ (inspectio
 
 `npm run build` runs the typecheck and the production build; it also
 injects the Content Security Policy into `dist/index.html` (dev mode does
-not carry it — see [CLAUDE.md](CLAUDE.md)).
+not carry it — see [AGENTS.md](AGENTS.md)).
 
 ## Smoke-test against a real snapshot
 
@@ -60,8 +60,8 @@ release or tag step.
 
 ## Conventions
 
-See [`CLAUDE.md`](CLAUDE.md) — the canonical reference for coding style,
+See [`AGENTS.md`](AGENTS.md) — the canonical reference for coding style,
 architectural rules, and gotchas (British/Commonwealth English, the
 worker/store/selectors/views architecture, the mixed-currency guard, the
-build-only CSP). It's loaded automatically by Claude Code but reads as a
-normal project doc.
+build-only CSP). Coding agents load it automatically (Claude Code via the
+one-line `CLAUDE.md` import), but it reads as a normal project doc.
