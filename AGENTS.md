@@ -138,15 +138,15 @@ Data flow: `.age` file → **pipeline** → **worker** → **store** →
   deposited/withdrawn are external-only; internal transfers are paired
   by amount and time (`pairInternalTransfers`) and shown once per pair.
   See docs/superpowers/specs/2026-07-08-dashboard-refinements-design.md.
-  The per-account returns table was removed; the band shows group
-  totals only (see
+  The band shows group totals only; there is no per-account returns
+  table (see
   docs/superpowers/specs/2026-07-09-dashboard-polish-design.md).
 
 ## Conventions
 
-- British/Commonwealth English in comments and docs. No hyperbole.
-- Dependencies are Renovate-managed (`renovate.json`, Task 18); don't
-  hand-bump pinned actions or package versions.
+- British/Commonwealth English in comments and docs.
+- Dependencies are Renovate-managed (`renovate.json`); don't hand-bump
+  pinned actions or package versions.
 - After changing commands, architecture, or a gotcha above, update this
   file and README.md in the same change.
 
