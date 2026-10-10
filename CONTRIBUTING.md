@@ -40,15 +40,12 @@ passphrase, and confirm the dashboard renders and the figures match what
 
 ## Dependency updates
 
-Dependencies are kept current by
-[Renovate](https://docs.renovatebot.com/) (config:
-[`renovate.json`](renovate.json)), covering npm packages and GitHub
-Actions:
+Dependencies are kept current by [Renovate](https://docs.renovatebot.com/) (config: [`renovate.json`](renovate.json)), covering npm packages and GitHub Actions:
 
-- Actions are pinned to commit SHAs (not mutable tags) for supply-chain
-  integrity; Renovate keeps the SHA and its version comment current.
-- Digest, minor, and patch updates auto-merge once CI passes; majors open
-  a PR for review.
+- Actions are pinned to commit SHAs (not mutable tags) for supply-chain integrity; Renovate keeps the SHA and its version comment current.
+- Digest, minor, and patch updates auto-merge once CI passes; majors open a PR for review.
+- Lock file maintenance refreshes `package-lock.json` so transitive dependencies move to their newest in-range versions, security fixes included. These PRs do not auto-merge.
+- Renovate checks direct dependencies against the [OSV](https://osv.dev/) vulnerability database and opens a fix PR when one has a known vulnerability. The Dependency Dashboard issue lists those advisories.
 
 Don't hand-bump these versions — let Renovate's PRs flow through.
 
